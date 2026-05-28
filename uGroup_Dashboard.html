@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Unite180 — uGroup Area Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy:#1A3C6E; --blue:#2E75B6; --light-blue:#DCE6F1;
+    --accent:#E8A020; --green:#217346; --red:#C0392B;
+    --bg:#F4F7FB; --card:#fff; --text:#1a1a2e; --muted:#6B7A99;
+    --border:#D0DCF0; --radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:20px 32px;
+    display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 12px rgba(26,60,110,.3);}
+  header h1{font-size:22px;letter-spacing:.5px;}
+  header p{font-size:13px;opacity:.8;margin-top:2px;}
+
+  .btn{display:inline-block;padding:9px 20px;background:var(--blue);color:#fff;border:none;
+    border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;transition:background .2s;}
+  .btn:hover{background:var(--navy);}
+  .btn-outline{background:transparent;color:var(--blue);border:2px solid var(--blue);}
+  .btn-outline:hover{background:var(--light-blue);}
+  .btn-green{background:var(--green);}
+  .btn-green:hover{background:#145a32;}
+  .btn-red{background:var(--red);}
+  .btn-red:hover{background:#922b21;}
+
+  #import-zone{margin:32px auto;max-width:640px;text-align:center;border:2.5px dashed var(--blue);
+    border-radius:var(--radius);padding:40px 24px;background:var(--card);cursor:pointer;transition:background .2s;}
+  #import-zone:hover{background:var(--light-blue);}
+  #import-zone .icon{font-size:48px;margin-bottom:12px;}
+  #import-zone h2{font-size:18px;color:var(--navy);margin-bottom:8px;}
+  #import-zone p{color:var(--muted);font-size:14px;}
+  #file-input{display:none;}
+  #file-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;}
+  .chip{background:var(--light-blue);color:var(--navy);border-radius:20px;padding:4px 12px;
+    font-size:12px;display:flex;align-items:center;gap:6px;}
+  .chip .remove{cursor:pointer;color:var(--red);font-weight:bold;}
+
+  #dashboard{display:none;padding:0 32px 40px;max-width:1400px;margin:0 auto;}
+  .filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);
+    border-radius:var(--radius);padding:14px 20px;margin-bottom:24px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .filter-bar label{font-size:13px;font-weight:bold;color:var(--navy);}
+  .filter-bar select{padding:6px 12px;border:1px solid var(--border);border-radius:6px;
+    font-size:13px;background:var(--bg);}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:16px;margin-bottom:28px;}
+  .stat-card{background:var(--card);border-radius:var(--radius);padding:18px 16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center;border-top:4px solid var(--blue);}
+  .stat-card .val{font-size:34px;font-weight:bold;color:var(--navy);}
+  .stat-card .lbl{font-size:12px;color:var(--muted);margin-top:4px;}
+  .stat-card.green{border-top-color:var(--green);}
+  .stat-card.orange{border-top-color:var(--accent);}
+
+  .section-title{font-size:16px;font-weight:bold;color:var(--navy);margin:28px 0 14px;
+    display:flex;align-items:center;gap:8px;}
+  .section-title::after{content:"";flex:1;height:2px;background:var(--light-blue);border-radius:2px;}
+
+  .chart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:28px;}
+  .chart-card{background:var(--card);border-radius:var(--radius);padding:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .chart-card h3{font-size:13px;font-weight:bold;color:var(--navy);margin-bottom:14px;}
+  .chart-card canvas{max-height:220px;}
+
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{background:var(--navy);color:#fff;padding:10px 14px;text-align:left;white-space:nowrap;}
+  td{padding:9px 14px;border-bottom:1px solid var(--border);}
+  tr:nth-child(even) td{background:var(--light-blue);}
+  tr:hover td{background:#c8d8ee;}
+  .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:bold;}
+  .badge-yes{background:#d4edda;color:#155724;}
+  .badge-no{background:#f8d7da;color:#721c24;}
+  .badge-none{background:#e2e3e5;color:#495057;}
+  .hr-bar{display:flex;gap:4px;}
+  .hr-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:bold;color:#fff;}
+  .hr-done{background:var(--green);}
+  .hr-todo{background:#ccc;}
+  .empty{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;
+    align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--card);border-radius:var(--radius);width:100%;max-width:620px;
+    max-height:90vh;overflow-y:auto;padding:28px 32px;position:relative;
+    box-shadow:0 8px 32px rgba(0,0,0,.2);}
+  .modal h2{font-size:18px;color:var(--navy);margin-bottom:20px;}
+  .modal .close-btn{position:absolute;top:16px;right:20px;background:none;border:none;
+    font-size:22px;cursor:pointer;color:var(--muted);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:12px;font-weight:bold;color:var(--navy);}
+  .field input,.field select{padding:8px 10px;border:1px solid var(--border);border-radius:6px;
+    font-size:13px;background:var(--bg);}
+  .field input:focus,.field select:focus{outline:2px solid var(--blue);border-color:var(--blue);}
+  .hr-checks{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;}
+  .hr-checks label{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
+  .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+
+  @media(max-width:600px){
+    header{flex-direction:column;gap:8px;}
+    #dashboard{padding:0 12px 32px;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⛪ Unite180 — uGroup Area Dashboard</h1>
+    <p id="area-subtitle">Import your uGroup Excel files to get started</p>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btn btn-green" id="header-add-btn" style="display:none" onclick="openModal()">+ Add Member</button>
+  </div>
+</header>
+
+<div id="import-section" style="padding:0 32px;">
+  <div id="import-zone" onclick="document.getElementById('file-input').click()">
+    <div class="icon">📂</div>
+    <h2>Import uGroup Excel Files</h2>
+    <p>Click to select one or more Excel files (uGroup_Template.xlsx format)<br>
+    All 7 uGroup files can be imported at once</p>
+    <button class="btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Choose Files</button>
+    <div id="file-chips"></div>
+  </div>
+  <input type="file" id="file-input" accept=".xlsx,.xls" multiple/>
+  <div style="text-align:center;margin-top:12px;display:flex;gap:10px;justify-content:center;">
+    <button class="btn" id="load-btn" style="display:none" onclick="buildDashboard()">Load Dashboard →</button>
+    <button class="btn btn-outline" onclick="loadSampleData()">Load Sample Data</button>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 16px;">
+    <h2 style="font-size:20px;color:var(--navy);">Area Overview</h2>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-green" onclick="openModal()">+ Add Member</button>
+      <button class="btn btn-outline" onclick="resetDashboard()">← Import Files</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <label>uGroup:</label>
+    <select id="filter-group" onchange="renderAll()"><option value="ALL">All Groups</option></select>
+    <label style="margin-left:12px;">Attendance Date:</label>
+    <select id="filter-date" onchange="renderAll()"><option value="ALL">All Dates</option></select>
+  </div>
+
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <div class="section-title">📋 Demographics</div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Gender Split</h3><canvas id="chart-gender"></canvas></div>
+    <div class="chart-card"><h3>Age Categories</h3><canvas id="chart-age"></canvas></div>
+    <div class="chart-card"><h3>Baptism Status</h3><canvas id="chart-baptism"></canvas></div>
+  </div>
+
+  <div class="section-title">📚 Spiritual Development</div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Homerun Completion</h3><canvas id="chart-homerun"></canvas></div>
+    <div class="chart-card"><h3>USM Status</h3><canvas id="chart-usm"></canvas></div>
+    <div class="chart-card"><h3>Attendance per uGroup</h3><canvas id="chart-attendance-group"></canvas></div>
+  </div>
+
+  <div class="section-title">📅 Attendance Log</div>
+  <div class="chart-card">
+    <div class="table-wrap" id="attendance-table"></div>
+  </div>
+
+  <div class="section-title" style="margin-top:28px;">
+    👥 Members
+    <span style="font-size:12px;font-weight:normal;color:var(--muted);margin-left:8px;" id="member-count"></span>
+  </div>
+  <div class="chart-card">
+    <div class="table-wrap" id="members-table"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal()">✕</button>
+    <h2 id="modal-title">➕ Add New Member</h2>
+    <input type="hidden" id="edit-index" value="-1"/>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>uGroup Name *</label>
+        <input id="f-ugroup" list="ugroup-list" placeholder="e.g. Grace Cell"/>
+        <datalist id="ugroup-list"></datalist>
+      </div>
+      <div class="field">
+        <label>Leader Name</label>
+        <select id="f-leader">
+          <option value="">Select leader…</option>
+          <option>Cornu du Toit</option>
+          <option>Jaden Viljoen</option>
+          <option>Johandre Combrinck</option>
+          <option>Karabo Moloto</option>
+          <option>Ntando Ngobe</option>
+          <option>Shaldon Cloete</option>
+          <option>Siyabonga Nhlonipho</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Member Name *</label>
+        <input id="f-name" placeholder="Full name"/>
+      </div>
+      <div class="field">
+        <label>Role</label>
+        <select id="f-role">
+          <option value="">Select…</option>
+          <option>Leader</option>
+          <option>Assistant Leader</option>
+          <option>Member</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="f-gender">
+          <option value="">Select…</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Date of Birth</label>
+        <input id="f-dob" type="date"/>
+      </div>
+      <div class="field">
+        <label>Age Category</label>
+        <select id="f-agecat">
+          <option value="">Auto-detect</option>
+          <option>Child</option>
+          <option>Youth</option>
+          <option>Young Adult</option>
+          <option>Adult</option>
+          <option>Senior</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Baptised</label>
+        <select id="f-baptised">
+          <option value="">Select…</option>
+          <option>Yes</option>
+          <option>No</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>USM Status</label>
+        <select id="f-usm">
+          <option value="None">None</option>
+          <option value="Year 1">Year 1</option>
+          <option value="Year 2">Year 2</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label>Homerun Completed</label>
+      <div class="hr-checks">
+        <label><input type="checkbox" id="f-hr1"/> Homerun 1</label>
+        <label><input type="checkbox" id="f-hr2"/> Homerun 2</label>
+        <label><input type="checkbox" id="f-hr3"/> Homerun 3</label>
+        <label><input type="checkbox" id="f-hr4"/> Homerun 4</label>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label>Notes</label>
+      <input id="f-notes" placeholder="Optional notes"/>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveMember()">Save Member</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allMembers=[], allAttendance=[], loadedFiles=[], chartInstances={};
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  Array.from(e.target.files).forEach(f => {
+    if (!loadedFiles.find(x=>x.name===f.name)) loadedFiles.push(f);
+  });
+  refreshChips();
+  document.getElementById('load-btn').style.display=loadedFiles.length?'inline-block':'none';
+  e.target.value='';
+});
+
+const iz=document.getElementById('import-zone');
+iz.addEventListener('dragover',e=>{e.preventDefault();iz.style.background='#c0d4ec';});
+iz.addEventListener('dragleave',()=>iz.style.background='');
+iz.addEventListener('drop',e=>{
+  e.preventDefault();iz.style.background='';
+  Array.from(e.dataTransfer.files).forEach(f=>{
+    if(!loadedFiles.find(x=>x.name===f.name)) loadedFiles.push(f);
+  });
+  refreshChips();
+  document.getElementById('load-btn').style.display=loadedFiles.length?'inline-block':'none';
+});
+
+function refreshChips(){
+  document.getElementById('file-chips').innerHTML=loadedFiles.map((f,i)=>
+    `<span class="chip">📄 ${f.name} <span class="remove" onclick="removeFile(${i})">✕</span></span>`
+  ).join('');
+}
+function removeFile(i){
+  loadedFiles.splice(i,1);refreshChips();
+  document.getElementById('load-btn').style.display=loadedFiles.length?'inline-block':'none';
+}
+function resetDashboard(){
+  loadedFiles=[];allMembers=[];allAttendance=[];refreshChips();
+  document.getElementById('load-btn').style.display='none';
+  document.getElementById('import-section').style.display='block';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('header-add-btn').style.display='none';
+  document.getElementById('area-subtitle').textContent='Import your uGroup Excel files to get started';
+}
+
+async function buildDashboard(){
+  allMembers=[];allAttendance=[];
+  for(const file of loadedFiles) await parseFile(file);
+  finishBuild();
+}
+
+function parseFile(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const mSheet=wb.Sheets['Members'];
+      if(mSheet){
+        const rows=XLSX.utils.sheet_to_json(mSheet,{defval:'',range:1});
+        rows.forEach(r=>{const n=normalize(r);if(n.name) allMembers.push(n);});
+      }
+      const aSheet=wb.Sheets['Attendance'];
+      if(aSheet){
+        const rows=XLSX.utils.sheet_to_json(aSheet,{defval:'',range:1});
+        rows.forEach(r=>{const n=normalizeAtt(r);if(n.name) allAttendance.push(n);});
+      }
+      resolve();
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function str(v){return String(v||'').trim();}
+
+function normalize(r){
+  const age=parseInt(r['Age'])||calcAge(r['Date of Birth']);
+  return{
+    ugroup:str(r['uGroup Name']),leader:str(r['Leader Name']),name:str(r['Member Name']),
+    role:str(r['Role']),gender:str(r['Gender']),dob:str(r['Date of Birth']),
+    age:age||null,agecat:str(r['Age Category'])||ageCategory(age),
+    baptised:str(r['Baptised']),hr1:str(r['Homerun 1']),hr2:str(r['Homerun 2']),
+    hr3:str(r['Homerun 3']),hr4:str(r['Homerun 4']),
+    usm:str(r['USM Status']||r['USM']||'None'),notes:str(r['Notes']),
+  };
+}
+
+function normalizeAtt(r){
+  let d=r['Date']||'';
+  if(d instanceof Date) d=d.toLocaleDateString('en-ZA');
+  else if(typeof d==='number') d=new Date(Math.round((d-25569)*86400*1000)).toLocaleDateString('en-ZA');
+  else d=str(d);
+  return{date:d,ugroup:str(r['uGroup Name']),leader:str(r['Leader Name']),
+    name:str(r['Member Name']),role:str(r['Role']),present:str(r['Present'])};
+}
+
+function calcAge(dob){
+  if(!dob) return null;
+  let d;
+  if(dob instanceof Date) d=dob;
+  else if(typeof dob==='number') d=new Date(Math.round((dob-25569)*86400*1000));
+  else{d=new Date(dob);if(isNaN(d)) return null;}
+  return Math.floor((Date.now()-d.getTime())/(365.25*24*3600*1000));
+}
+
+function ageCategory(age){
+  if(!age) return'';
+  if(age<13) return'Child';
+  if(age<=25) return'Youth';
+  if(age<=35) return'Young Adult';
+  if(age<=50) return'Adult';
+  return'Senior';
+}
+
+function loadSampleData(){
+  const groups=['Grace Cell','Hope Cell','Faith Cell','Joy Cell','Peace Cell','Love Cell','Light Cell'];
+  const leaders=['Cornu du Toit','Jaden Viljoen','Johandre Combrinck','Karabo Moloto','Ntando Ngobe','Shaldon Cloete','Siyabonga Nhlonipho'];
+  const names=['James','Sarah','David','Emma','Luke','Zoe','Noah','Ava','Liam','Mia',
+    'Ethan','Lily','Oliver','Chloe','Jacob','Sofia','Mason','Ella','William',
+    'Amelia','Sipho','Lerato','Thandi','Bongani','Nomsa','Pieter','Anna'];
+  const genders=['Male','Female'];
+  const ages=[16,18,21,24,27,30,34,38,42,47,52,58,19,23,29,33,45];
+  const usms=['None','None','None','Year 1','Year 2','Completed'];
+  const yn=()=>Math.random()>.3?'Yes':'No';
+
+  allMembers=[];
+  groups.forEach((g,gi)=>{
+    const leader=leaders[gi];
+    allMembers.push({ugroup:g,leader,name:leader,role:'Leader',gender:'Male',
+      age:35,agecat:'Adult',baptised:'Yes',hr1:'Yes',hr2:'Yes',hr3:'Yes',hr4:'Yes',usm:'Completed',notes:''});
+    allMembers.push({ugroup:g,leader,name:names[Math.floor(Math.random()*names.length)],role:'Assistant Leader',
+      gender:genders[Math.floor(Math.random()*2)],age:28,agecat:'Young Adult',
+      baptised:'Yes',hr1:'Yes',hr2:'Yes',hr3:yn(),hr4:yn(),
+      usm:usms[Math.floor(Math.random()*usms.length)],notes:''});
+    for(let m=0;m<8+Math.floor(Math.random()*6);m++){
+      const a=ages[Math.floor(Math.random()*ages.length)];
+      allMembers.push({ugroup:g,leader,name:names[Math.floor(Math.random()*names.length)],
+        role:'Member',gender:genders[Math.floor(Math.random()*2)],age:a,agecat:ageCategory(a),
+        baptised:yn(),hr1:yn(),hr2:Math.random()>.5?yn():'No',
+        hr3:Math.random()>.6?yn():'No',hr4:Math.random()>.7?yn():'No',
+        usm:usms[Math.floor(Math.random()*usms.length)],notes:''});
+    }
+  });
+
+  allAttendance=[];
+  const weds=[];let d=new Date();
+  while(weds.length<4){if(d.getDay()===3)weds.push(new Date(d));d.setDate(d.getDate()-1);}
+  weds.forEach(wed=>{
+    const ds=wed.toLocaleDateString('en-ZA');
+    allMembers.forEach(m=>{
+      if(Math.random()>.15)
+        allAttendance.push({date:ds,ugroup:m.ugroup,leader:m.leader,
+          name:m.name,role:m.role,present:Math.random()>.2?'Yes':'No'});
+    });
+  });
+  finishBuild();
+}
+
+function finishBuild(){
+  if(!allMembers.length&&!allAttendance.length){
+    alert('No data found. Make sure your file uses the uGroup_Template.xlsx format (column headers must be in row 2).');
+    return;
+  }
+  populateFilters();
+  document.getElementById('import-section').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('header-add-btn').style.display='inline-block';
+  updateSubtitle();renderAll();
+}
+
+function updateSubtitle(){
+  const groups=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].length;
+  document.getElementById('area-subtitle').textContent=`${groups} uGroups · ${allMembers.length} members`;
+}
+
+function populateFilters(){
+  const groups=['ALL',...[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort()];
+  const dates=['ALL',...[...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort().reverse()];
+  document.getElementById('filter-group').innerHTML=groups.map(g=>`<option value="${g}">${g==='ALL'?'All Groups':g}</option>`).join('');
+  document.getElementById('filter-date').innerHTML=dates.map(d=>`<option value="${d}">${d==='ALL'?'All Dates':d}</option>`).join('');
+}
+
+function getF(){return{group:document.getElementById('filter-group').value,date:document.getElementById('filter-date').value};}
+function filteredMembers(){const f=getF();return allMembers.filter(m=>(f.group==='ALL'||m.ugroup===f.group)&&m.name);}
+function filteredAttendance(){const f=getF();return allAttendance.filter(a=>(f.group==='ALL'||a.ugroup===f.group)&&(f.date==='ALL'||a.date===f.date)&&a.name);}
+
+function renderAll(){
+  const members=filteredMembers(),att=filteredAttendance();
+  renderStats(members,att);
+  renderChart('chart-gender',buildGenderData(members));
+  renderChart('chart-age',buildAgeData(members));
+  renderChart('chart-baptism',buildBaptismData(members));
+  renderChart('chart-homerun',buildHomerumData(members));
+  renderChart('chart-usm',buildUsmData(members));
+  renderChart('chart-attendance-group',buildAttGroupData(att));
+  renderAttTable(att);renderMembersTable(members);
+}
+
+function renderStats(members,att){
+  const total=members.length;
+  const groups=[...new Set(members.map(m=>m.ugroup).filter(Boolean))].length;
+  const baptised=members.filter(m=>m.baptised.toLowerCase()==='yes').length;
+  const present=att.filter(a=>a.present.toLowerCase()==='yes').length;
+  const usmActive=members.filter(m=>m.usm==='Year 1'||m.usm==='Year 2').length;
+  const hrdone=members.filter(m=>m.hr4.toLowerCase()==='yes').length;
+  const cards=[
+    {val:groups,lbl:'uGroups',cls:''},
+    {val:total,lbl:'Total Members',cls:''},
+    {val:present,lbl:'Present (filtered)',cls:'green'},
+    {val:baptised,lbl:'Baptised',cls:'green'},
+    {val:total-baptised,lbl:'Not Baptised',cls:'orange'},
+    {val:usmActive,lbl:'In USM',cls:''},
+    {val:hrdone,lbl:'Homerun 4 Complete',cls:'green'},
+  ];
+  document.getElementById('stat-grid').innerHTML=cards.map(c=>
+    `<div class="stat-card ${c.cls}"><div class="val">${c.val}</div><div class="lbl">${c.lbl}</div></div>`
+  ).join('');
+}
+
+function buildGenderData(m){
+  const male=m.filter(x=>x.gender.toLowerCase()==='male').length;
+  const female=m.filter(x=>x.gender.toLowerCase()==='female').length;
+  const other=m.length-male-female;
+  const lbls=['Male','Female','Other'].filter((_,i)=>[male,female,other][i]>0);
+  const data=[male,female,other].filter(v=>v>0);
+  return{type:'doughnut',data:{labels:lbls,datasets:[{data,backgroundColor:['#2E75B6','#E8A020','#aaa'],borderWidth:2}]},
+    options:{plugins:{legend:{position:'bottom'}},maintainAspectRatio:true}};
+}
+function buildAgeData(m){
+  const cats=['Child','Youth','Young Adult','Adult','Senior'];
+  const counts=cats.map(c=>m.filter(x=>x.agecat===c).length);
+  return{type:'bar',data:{labels:cats,datasets:[{label:'Members',data:counts,
+    backgroundColor:['#5B9BD5','#2E75B6','#1A3C6E','#E8A020','#8B4513'],borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:true}};
+}
+function buildBaptismData(m){
+  const yes=m.filter(x=>x.baptised.toLowerCase()==='yes').length;
+  return{type:'doughnut',data:{labels:['Baptised','Not Yet'],datasets:[{data:[yes,m.length-yes],
+    backgroundColor:['#217346','#C0392B'],borderWidth:2}]},
+    options:{plugins:{legend:{position:'bottom'}},maintainAspectRatio:true}};
+}
+function buildHomerumData(m){
+  const keys=['hr1','hr2','hr3','hr4'];
+  const counts=keys.map(k=>m.filter(x=>x[k].toLowerCase()==='yes').length);
+  return{type:'bar',data:{labels:['Homerun 1','Homerun 2','Homerun 3','Homerun 4'],
+    datasets:[{label:'Completed',data:counts,backgroundColor:['#2E75B6','#1A3C6E','#217346','#E8A020'],borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:true}};
+}
+function buildUsmData(m){
+  const cats=['None','Year 1','Year 2','Completed'];
+  const counts=cats.map(c=>m.filter(x=>(x.usm||'None')===c).length);
+  return{type:'doughnut',data:{labels:cats,datasets:[{data:counts,
+    backgroundColor:['#aaa','#2E75B6','#1A3C6E','#217346'],borderWidth:2}]},
+    options:{plugins:{legend:{position:'bottom'}},maintainAspectRatio:true}};
+}
+function buildAttGroupData(att){
+  const groups=[...new Set(att.map(a=>a.ugroup).filter(Boolean))].sort();
+  return{type:'bar',data:{labels:groups,datasets:[
+    {label:'Present',data:groups.map(g=>att.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='yes').length),backgroundColor:'#217346',borderRadius:4},
+    {label:'Absent',data:groups.map(g=>att.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='no').length),backgroundColor:'#C0392B',borderRadius:4}
+  ]},options:{plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}},maintainAspectRatio:true}};
+}
+
+function renderChart(id,config){
+  if(chartInstances[id]) chartInstances[id].destroy();
+  const ctx=document.getElementById(id);
+  if(ctx) chartInstances[id]=new Chart(ctx,config);
+}
+
+function renderAttTable(att){
+  const div=document.getElementById('attendance-table');
+  if(!att.length){div.innerHTML='<p class="empty">No attendance records for this selection.</p>';return;}
+  const rows=att.slice(0,200).map(a=>
+    `<tr><td>${a.date}</td><td>${a.ugroup}</td><td>${a.name}</td><td>${a.role}</td><td>${badge(a.present)}</td></tr>`
+  ).join('');
+  div.innerHTML=`<table><thead><tr><th>Date</th><th>uGroup</th><th>Member</th><th>Role</th><th>Present</th></tr></thead><tbody>${rows}</tbody></table>
+  ${att.length>200?`<p style="font-size:12px;color:var(--muted);padding:8px">Showing 200 of ${att.length} — use filters to narrow down.</p>`:''}`;
+}
+
+function renderMembersTable(members){
+  const div=document.getElementById('members-table');
+  document.getElementById('member-count').textContent=`(${members.length})`;
+  if(!members.length){div.innerHTML='<p class="empty">No members found.</p>';return;}
+  const rows=members.map(m=>
+    `<tr>
+      <td>${m.ugroup}</td><td>${m.name}</td><td>${m.role}</td>
+      <td>${m.gender}</td><td>${m.age||'—'}</td><td>${m.agecat||'—'}</td>
+      <td>${badge(m.baptised)}</td>
+      <td><div class="hr-bar">${[m.hr1,m.hr2,m.hr3,m.hr4].map((v,j)=>
+        `<div class="hr-dot ${v.toLowerCase()==='yes'?'hr-done':'hr-todo'}" title="HR${j+1}">${j+1}</div>`
+      ).join('')}</div></td>
+      <td>${m.usm||'—'}</td>
+      <td><button class="btn" style="padding:4px 10px;font-size:11px" onclick="editMember(${allMembers.indexOf(m)})">Edit</button>
+          <button class="btn btn-red" style="padding:4px 10px;font-size:11px;margin-left:4px" onclick="deleteMember(${allMembers.indexOf(m)})">Del</button></td>
+    </tr>`
+  ).join('');
+  div.innerHTML=`<table><thead><tr><th>uGroup</th><th>Name</th><th>Role</th><th>Gender</th><th>Age</th><th>Category</th><th>Baptised</th><th>Homerun</th><th>USM</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function badge(v){
+  const l=(v||'').toLowerCase();
+  if(l==='yes') return`<span class="badge badge-yes">Yes</span>`;
+  if(l==='no')  return`<span class="badge badge-no">No</span>`;
+  return`<span class="badge badge-none">—</span>`;
+}
+
+function openModal(idx=-1){
+  document.getElementById('edit-index').value=idx;
+  document.getElementById('modal-title').textContent=idx>=0?'✏️ Edit Member':'➕ Add New Member';
+  const dl=document.getElementById('ugroup-list');
+  dl.innerHTML=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].map(g=>`<option value="${g}">`).join('');
+  if(idx>=0){
+    const m=allMembers[idx];
+    document.getElementById('f-ugroup').value=m.ugroup;
+    document.getElementById('f-leader').value=m.leader;
+    document.getElementById('f-name').value=m.name;
+    document.getElementById('f-role').value=m.role;
+    document.getElementById('f-gender').value=m.gender;
+    document.getElementById('f-dob').value=m.dob?(m.dob instanceof Date?m.dob.toISOString().split('T')[0]:''):'';
+    document.getElementById('f-agecat').value=m.agecat||'';
+    document.getElementById('f-baptised').value=m.baptised;
+    document.getElementById('f-usm').value=m.usm||'None';
+    document.getElementById('f-hr1').checked=m.hr1.toLowerCase()==='yes';
+    document.getElementById('f-hr2').checked=m.hr2.toLowerCase()==='yes';
+    document.getElementById('f-hr3').checked=m.hr3.toLowerCase()==='yes';
+    document.getElementById('f-hr4').checked=m.hr4.toLowerCase()==='yes';
+    document.getElementById('f-notes').value=m.notes;
+  }else{
+    ['f-ugroup','f-name','f-dob','f-notes'].forEach(id=>document.getElementById(id).value='');
+    ['f-role','f-gender','f-agecat','f-baptised','f-leader'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-usm').value='None';
+    ['f-hr1','f-hr2','f-hr3','f-hr4'].forEach(id=>document.getElementById(id).checked=false);
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+function saveMember(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Member name is required.');return;}
+  const dob=document.getElementById('f-dob').value;
+  const age=dob?calcAge(new Date(dob)):null;
+  const m={
+    ugroup:document.getElementById('f-ugroup').value.trim(),
+    leader:document.getElementById('f-leader').value,
+    name,role:document.getElementById('f-role').value,
+    gender:document.getElementById('f-gender').value,dob,age,
+    agecat:document.getElementById('f-agecat').value||ageCategory(age),
+    baptised:document.getElementById('f-baptised').value,
+    hr1:document.getElementById('f-hr1').checked?'Yes':'No',
+    hr2:document.getElementById('f-hr2').checked?'Yes':'No',
+    hr3:document.getElementById('f-hr3').checked?'Yes':'No',
+    hr4:document.getElementById('f-hr4').checked?'Yes':'No',
+    usm:document.getElementById('f-usm').value,
+    notes:document.getElementById('f-notes').value.trim(),
+  };
+  const idx=parseInt(document.getElementById('edit-index').value);
+  if(idx>=0) allMembers[idx]=m; else allMembers.push(m);
+  closeModal();populateFilters();updateSubtitle();renderAll();
+}
+
+function editMember(idx){openModal(idx);}
+function deleteMember(idx){
+  if(!confirm(`Remove "${allMembers[idx].name}" from the list?`)) return;
+  allMembers.splice(idx,1);populateFilters();updateSubtitle();renderAll();
+}
+</script>
+</body>
+</html>
