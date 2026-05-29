@@ -172,6 +172,15 @@
     <div class="chart-card"><h3>Attendance per uGroup</h3><canvas id="chart-attendance-group"></canvas></div>
   </div>
 
+  <div class="section-title">📅 This Wednesday</div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Attendance This Wednesday — per uGroup</h3><canvas id="chart-this-wed"></canvas></div>
+    <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;">
+      <h3>This Wednesday Summary</h3>
+      <div id="wed-summary" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
   <div class="section-title">📅 Attendance Log</div>
   <div class="chart-card">
     <div class="table-wrap" id="attendance-table"></div>
@@ -480,6 +489,7 @@ function renderAll(){
   renderChart('chart-homerun',buildHomerumData(members));
   renderChart('chart-usm',buildUsmData(members));
   renderChart('chart-attendance-group',buildAttGroupData(att));
+  renderThisWednesday();
   renderAttTable(att);renderMembersTable(members);
 }
 
@@ -647,6 +657,57 @@ function saveMember(){
   const idx=parseInt(document.getElementById('edit-index').value);
   if(idx>=0) allMembers[idx]=m; else allMembers.push(m);
   closeModal();populateFilters();updateSubtitle();renderAll();
+}
+
+function getThisWednesday(){
+  const d=new Date();
+  const day=d.getDay();
+  // Go back to most recent Wednesday (day 3)
+  const diff=day>=3?day-3:day+4;
+  d.setDate(d.getDate()-diff);
+  return d.toLocaleDateString('en-ZA');
+}
+
+function renderThisWednesday(){
+  const wedDate=getThisWednesday();
+  const f=getF();
+
+  // Find closest available date if this wednesday has no data
+  const availDates=[...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort().reverse();
+  const useDate = allAttendance.find(a=>a.date===wedDate) ? wedDate : (availDates[0]||null);
+
+  const wedAtt=allAttendance.filter(a=>a.date===useDate&&(f.group==='ALL'||a.ugroup===f.group));
+  const groups=[...new Set(allAttendance.map(a=>a.ugroup).filter(Boolean))].sort();
+  const present=groups.map(g=>wedAtt.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='yes').length);
+  const absent =groups.map(g=>wedAtt.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='no').length);
+
+  const totalPresent=present.reduce((a,b)=>a+b,0);
+  const totalRecorded=wedAtt.length;
+
+  renderChart('chart-this-wed',{type:'bar',
+    data:{labels:groups,datasets:[
+      {label:'Present',data:present,backgroundColor:'#217346',borderRadius:6},
+      {label:'Absent', data:absent, backgroundColor:'#C0392B',borderRadius:6},
+    ]},
+    options:{plugins:{legend:{position:'bottom'},title:{display:true,text:useDate?`Date: ${useDate}`:'No data yet'}},
+      scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:true}
+  });
+
+  const summaryDiv=document.getElementById('wed-summary');
+  if(!useDate||totalRecorded===0){
+    summaryDiv.innerHTML='<p class="empty" style="padding:16px">No Wednesday attendance recorded yet.</p>';
+    return;
+  }
+  const pct=totalRecorded>0?Math.round(totalPresent/totalRecorded*100):0;
+  summaryDiv.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="stat-card green" style="margin:0"><div class="val">${totalPresent}</div><div class="lbl">Present</div></div>
+      <div class="stat-card red"   style="margin:0;border-top-color:var(--red)"><div class="val">${totalRecorded-totalPresent}</div><div class="lbl">Absent</div></div>
+      <div class="stat-card"       style="margin:0;grid-column:span 2"><div class="val">${pct}%</div><div class="lbl">Attendance Rate</div></div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">
+      ${useDate===wedDate?'This Wednesday':'Most recent recorded: '} ${useDate}
+    </p>`;
 }
 
 function editMember(idx){openModal(idx);}
