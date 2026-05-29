@@ -146,6 +146,7 @@
     <div style="display:flex;gap:10px;">
       <button class="btn btn-green" onclick="openModal()">+ Add Member</button>
       <button class="btn btn-outline" onclick="resetDashboard()">← Import Files</button>
+      <button class="btn btn-red" onclick="clearAllData()" style="font-size:12px;padding:9px 14px;">🗑 Clear Data</button>
     </div>
   </div>
 
@@ -301,6 +302,26 @@
 <script>
 let allMembers=[], allAttendance=[], loadedFiles=[], chartInstances={};
 
+// ── Persistence ───────────────────────────────────────────────────────────
+function saveToStorage(){
+  try{
+    localStorage.setItem('ugroup_members', JSON.stringify(allMembers));
+    localStorage.setItem('ugroup_attendance', JSON.stringify(allAttendance));
+  }catch(e){}
+}
+function loadFromStorage(){
+  try{
+    const m=localStorage.getItem('ugroup_members');
+    const a=localStorage.getItem('ugroup_attendance');
+    if(m) allMembers=JSON.parse(m);
+    if(a) allAttendance=JSON.parse(a);
+  }catch(e){}
+}
+
+// Load on startup
+loadFromStorage();
+if(allMembers.length||allAttendance.length){ finishBuild(); }
+
 document.getElementById('file-input').addEventListener('change', function(e) {
   Array.from(e.target.files).forEach(f => {
     if (!loadedFiles.find(x=>x.name===f.name)) loadedFiles.push(f);
@@ -331,6 +352,14 @@ function removeFile(i){
   loadedFiles.splice(i,1);refreshChips();
   document.getElementById('load-btn').style.display=loadedFiles.length?'inline-block':'none';
 }
+function clearAllData(){
+  if(!confirm('This will permanently delete all member and attendance data. Are you sure?')) return;
+  allMembers=[];allAttendance=[];
+  localStorage.removeItem('ugroup_members');
+  localStorage.removeItem('ugroup_attendance');
+  resetDashboard();
+}
+
 function resetDashboard(){
   loadedFiles=[];allMembers=[];allAttendance=[];refreshChips();
   document.getElementById('load-btn').style.display='none';
@@ -457,6 +486,7 @@ function finishBuild(){
     alert('No data found. Make sure your file uses the uGroup_Template.xlsx format (column headers must be in row 2).');
     return;
   }
+  saveToStorage();
   populateFilters();
   document.getElementById('import-section').style.display='none';
   document.getElementById('dashboard').style.display='block';
@@ -656,6 +686,7 @@ function saveMember(){
   };
   const idx=parseInt(document.getElementById('edit-index').value);
   if(idx>=0) allMembers[idx]=m; else allMembers.push(m);
+  saveToStorage();
   closeModal();populateFilters();updateSubtitle();renderAll();
 }
 
@@ -713,7 +744,9 @@ function renderThisWednesday(){
 function editMember(idx){openModal(idx);}
 function deleteMember(idx){
   if(!confirm(`Remove "${allMembers[idx].name}" from the list?`)) return;
-  allMembers.splice(idx,1);populateFilters();updateSubtitle();renderAll();
+  allMembers.splice(idx,1);
+  saveToStorage();
+  populateFilters();updateSubtitle();renderAll();
 }
 </script>
 </body>
