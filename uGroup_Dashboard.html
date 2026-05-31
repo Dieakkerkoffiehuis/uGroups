@@ -550,7 +550,7 @@ function buildGenderData(m){
   const other=m.length-male-female;
   const lbls=['Male','Female','Other'].filter((_,i)=>[male,female,other][i]>0);
   const data=[male,female,other].filter(v=>v>0);
-  return{type:'doughnut',data:{labels:lbls,datasets:[{data,backgroundColor:['#2E75B6','#E8A020','#aaa'],borderWidth:2}]},
+  return{type:'doughnut',data:{labels:lbls,datasets:[{data,backgroundColor:['#2E75B6','#E75480','#aaa'],borderWidth:2}]},
     options:{plugins:{legend:{position:'bottom'}},maintainAspectRatio:true}};
 }
 function buildAgeData(m){
