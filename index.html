@@ -236,6 +236,10 @@
     <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
       <button class="btn" id="import-btn" style="display:none" onclick="importFiles()">✅ Import Selected Files</button>
       <button class="btn btn-outline" onclick="loadSampleData()">Load Sample Data</button>
+      <button class="btn btn-outline" onclick="exportData()" style="font-size:12px;padding:7px 14px;">💾 Export Backup</button>
+      <label class="btn btn-outline" style="font-size:12px;padding:7px 14px;cursor:pointer;">
+        📂 Restore Backup <input type="file" accept=".json" style="display:none" onchange="importData(event)"/>
+      </label>
       <button class="btn btn-red btn-sm" onclick="clearAllData()" style="margin-left:auto;">🗑 Clear All Data</button>
     </div>
 
@@ -540,6 +544,39 @@ function loadFromStorage(){
     if(m) allMembers=JSON.parse(m);
     if(a) allAttendance=JSON.parse(a);
   }catch(e){}
+}
+function exportData(){
+  if(!allMembers.length&&!allAttendance.length){alert('No data to export yet.');return;}
+  const backup={members:allMembers,attendance:allAttendance,exported:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`uGroup_Backup_${new Date().toLocaleDateString('en-ZA').replace(/\//g,'-')}.json`;
+  a.click();URL.revokeObjectURL(a.href);
+}
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.members&&!data.attendance){alert('Invalid backup file.');return;}
+      if(!confirm(`This will merge ${(data.members||[]).length} members and ${(data.attendance||[]).length} attendance records into your current data. Continue?`))return;
+      (data.members||[]).forEach(m=>{
+        const idx=allMembers.findIndex(x=>x.name===m.name&&x.ugroup===m.ugroup);
+        if(idx>=0) allMembers[idx]={...allMembers[idx],...m};
+        else allMembers.push(m);
+      });
+      (data.attendance||[]).forEach(a=>{
+        if(!allAttendance.find(x=>x.name===a.name&&x.date===a.date&&x.ugroup===a.ugroup))
+          allAttendance.push(a);
+      });
+      saveToStorage();populateFilters();updateSubtitle();renderAll();
+      alert('✅ Backup restored successfully!');
+    }catch(err){alert('Could not read backup file. Make sure it\'s a valid uGroup backup.');}
+  };
+  reader.readAsText(file);
+  event.target.value='';
 }
 function clearAllData(){
   if(!confirm('Delete ALL member and attendance data? This cannot be undone.')) return;
