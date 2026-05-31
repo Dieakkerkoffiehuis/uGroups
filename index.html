@@ -217,6 +217,7 @@
       <p id="area-subtitle">Loading…</p>
     </div>
     <div class="hdr-actions">
+      <button class="btn" onclick="openUGroupModal()" style="background:#6a0dad;">+ Add uGroup</button>
       <button class="btn btn-green" onclick="openMemberModal()">+ Add Member</button>
       <button class="btn btn-outline" onclick="openSettings()" style="color:#fff;border-color:rgba(255,255,255,.5);">⚙ Settings</button>
       <button class="btn btn-outline" onclick="doLogout()" style="color:#fff;border-color:rgba(255,255,255,.5);">Sign Out</button>
@@ -383,6 +384,52 @@
     <div class="form-actions">
       <button class="btn btn-outline" onclick="closeMemberModal()">Cancel</button>
       <button class="btn btn-green" onclick="saveMember()">Save Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add uGroup Modal ── -->
+<div class="modal-overlay" id="ugroup-modal">
+  <div class="modal" style="max-width:420px;">
+    <button class="close-btn" onclick="closeUGroupModal()">✕</button>
+    <h2>➕ Add New uGroup</h2>
+    <div class="form-grid" style="grid-template-columns:1fr;">
+      <div class="field">
+        <label>uGroup Name *</label>
+        <input id="ug-name" placeholder="e.g. Grace Cell"/>
+      </div>
+      <div class="field">
+        <label>Leader Name *</label>
+        <select id="ug-leader">
+          <option value="">Select leader…</option>
+          <option>Cornu du Toit</option>
+          <option>Jaden Viljoen</option>
+          <option>Johandre Combrinck</option>
+          <option>Karabo Moloto</option>
+          <option>Ntando Ngobe</option>
+          <option>Shaldon Cloete</option>
+          <option>Siyabonga Nhlonipho</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Assistant Leader (optional)</label>
+        <input id="ug-assistant" placeholder="Full name"/>
+      </div>
+      <div class="field">
+        <label>Meeting Day</label>
+        <select id="ug-day">
+          <option value="Wednesday">Wednesday</option>
+          <option value="Thursday">Thursday</option>
+          <option value="Friday">Friday</option>
+          <option value="Saturday">Saturday</option>
+          <option value="Sunday">Sunday</option>
+        </select>
+      </div>
+    </div>
+    <div id="ugroup-msg" style="font-size:13px;margin-top:8px;color:var(--red);"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeUGroupModal()">Cancel</button>
+      <button class="btn" style="background:#6a0dad;" onclick="saveUGroup()">Create uGroup</button>
     </div>
   </div>
 </div>
@@ -876,6 +923,43 @@ function editMember(idx){openMemberModal(idx);}
 function delMember(idx){
   if(!confirm(`Remove "${allMembers[idx].name}"?`)) return;
   allMembers.splice(idx,1);saveToStorage();populateFilters();updateSubtitle();renderAll();
+}
+
+// ══════════════════════════════════════════════════════
+// UGROUP MODAL
+// ══════════════════════════════════════════════════════
+function openUGroupModal(){
+  document.getElementById('ug-name').value='';
+  document.getElementById('ug-leader').value='';
+  document.getElementById('ug-assistant').value='';
+  document.getElementById('ug-day').value='Wednesday';
+  document.getElementById('ugroup-msg').textContent='';
+  document.getElementById('ugroup-modal').classList.add('open');
+}
+function closeUGroupModal(){ document.getElementById('ugroup-modal').classList.remove('open'); }
+document.getElementById('ugroup-modal').addEventListener('click',function(e){if(e.target===this)closeUGroupModal();});
+
+function saveUGroup(){
+  const name=document.getElementById('ug-name').value.trim();
+  const leader=document.getElementById('ug-leader').value;
+  const asst=document.getElementById('ug-assistant').value.trim();
+  const msg=document.getElementById('ugroup-msg');
+  if(!name){msg.textContent='uGroup name is required.';return;}
+  if(!leader){msg.textContent='Please select a leader.';return;}
+  if(allMembers.find(m=>m.ugroup===name)){msg.textContent='A uGroup with this name already exists.';return;}
+
+  // Add leader as first member
+  allMembers.push({ugroup:name,leader,name:leader,role:'Leader',gender:'',
+    age:null,agecat:'',baptised:'',hr1:'No',hr2:'No',hr3:'No',hr4:'No',usm:'None',notes:''});
+  // Add assistant if provided
+  if(asst){
+    allMembers.push({ugroup:name,leader,name:asst,role:'Assistant Leader',gender:'',
+      age:null,agecat:'',baptised:'',hr1:'No',hr2:'No',hr3:'No',hr4:'No',usm:'None',notes:''});
+  }
+  saveToStorage();closeUGroupModal();populateFilters();updateSubtitle();renderAll();
+  // Auto-open filter to the new group
+  document.getElementById('filter-group').value=name;
+  renderAll();
 }
 
 // ══════════════════════════════════════════════════════
