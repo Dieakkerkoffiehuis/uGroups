@@ -3,206 +3,301 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Unite180 — uGroup Area Dashboard</title>
+<title>Unite180 — uGroup Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  :root {
-    --navy:#1A3C6E; --blue:#2E75B6; --light-blue:#DCE6F1;
-    --accent:#E8A020; --green:#217346; --red:#C0392B;
-    --bg:#F4F7FB; --card:#fff; --text:#1a1a2e; --muted:#6B7A99;
-    --border:#D0DCF0; --radius:12px;
+  :root{
+    --navy:#1A3C6E;--blue:#2E75B6;--light-blue:#DCE6F1;
+    --accent:#E8A020;--green:#217346;--red:#C0392B;--pink:#E75480;
+    --bg:#F4F7FB;--card:#fff;--text:#1a1a2e;--muted:#6B7A99;
+    --border:#D0DCF0;--radius:12px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-  header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:20px 32px;
-    display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 12px rgba(26,60,110,.3);}
-  header h1{font-size:22px;letter-spacing:.5px;}
-  header p{font-size:13px;opacity:.8;margin-top:2px;}
+  /* ── LOGIN ── */
+  #login-screen{
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 60%,#4a90d9 100%);
+  }
+  .login-box{
+    background:#fff;border-radius:20px;padding:48px 40px;width:100%;max-width:400px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25);text-align:center;
+  }
+  .login-logo{font-size:52px;margin-bottom:8px;}
+  .login-box h1{font-size:22px;color:var(--navy);margin-bottom:4px;}
+  .login-box p{font-size:13px;color:var(--muted);margin-bottom:32px;}
+  .login-field{text-align:left;margin-bottom:16px;}
+  .login-field label{display:block;font-size:12px;font-weight:bold;color:var(--navy);margin-bottom:6px;}
+  .login-field input{
+    width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;
+    font-size:14px;background:var(--bg);transition:border .2s;
+  }
+  .login-field input:focus{outline:none;border-color:var(--blue);}
+  .login-btn{
+    width:100%;padding:13px;background:linear-gradient(135deg,var(--navy),var(--blue));
+    color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:bold;
+    cursor:pointer;margin-top:8px;transition:opacity .2s;
+  }
+  .login-btn:hover{opacity:.9;}
+  .login-error{
+    background:#fdecea;color:#c0392b;border-radius:8px;padding:10px 14px;
+    font-size:13px;margin-top:14px;display:none;
+  }
+  .login-hint{font-size:11px;color:var(--muted);margin-top:20px;}
 
-  .btn{display:inline-block;padding:9px 20px;background:var(--blue);color:#fff;border:none;
-    border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;transition:background .2s;}
+  /* ── APP SHELL ── */
+  #app{display:none;}
+
+  header{
+    background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;
+    padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 4px 12px rgba(26,60,110,.3);
+  }
+  header h1{font-size:20px;letter-spacing:.5px;}
+  header p{font-size:12px;opacity:.8;margin-top:2px;}
+  .hdr-actions{display:flex;gap:10px;align-items:center;}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--blue);
+    color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;transition:background .2s;}
   .btn:hover{background:var(--navy);}
   .btn-outline{background:transparent;color:var(--blue);border:2px solid var(--blue);}
   .btn-outline:hover{background:var(--light-blue);}
-  .btn-green{background:var(--green);}
-  .btn-green:hover{background:#145a32;}
-  .btn-red{background:var(--red);}
-  .btn-red:hover{background:#922b21;}
+  .btn-green{background:var(--green);}  .btn-green:hover{background:#145a32;}
+  .btn-red{background:var(--red);}      .btn-red:hover{background:#922b21;}
+  .btn-sm{padding:5px 12px;font-size:11px;}
 
-  #import-zone{margin:32px auto;max-width:640px;text-align:center;border:2.5px dashed var(--blue);
-    border-radius:var(--radius);padding:40px 24px;background:var(--card);cursor:pointer;transition:background .2s;}
-  #import-zone:hover{background:var(--light-blue);}
-  #import-zone .icon{font-size:48px;margin-bottom:12px;}
-  #import-zone h2{font-size:18px;color:var(--navy);margin-bottom:8px;}
-  #import-zone p{color:var(--muted);font-size:14px;}
+  /* Main content */
+  #main{padding:24px 28px 48px;max-width:1400px;margin:0 auto;}
+
+  /* Top action bar */
+  .action-bar{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    background:var(--card);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  .action-bar-left{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .action-bar-right{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+  /* Import area */
+  #drop-zone{
+    border:2px dashed var(--blue);border-radius:var(--radius);padding:28px;
+    text-align:center;background:var(--card);cursor:pointer;transition:background .2s;
+    margin-bottom:20px;
+  }
+  #drop-zone:hover,#drop-zone.drag-over{background:var(--light-blue);}
+  #drop-zone h3{color:var(--navy);font-size:15px;margin-bottom:6px;}
+  #drop-zone p{color:var(--muted);font-size:13px;}
   #file-input{display:none;}
-  #file-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;}
+  #file-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;}
   .chip{background:var(--light-blue);color:var(--navy);border-radius:20px;padding:4px 12px;
     font-size:12px;display:flex;align-items:center;gap:6px;}
   .chip .remove{cursor:pointer;color:var(--red);font-weight:bold;}
 
-  #dashboard{display:none;padding:0 32px 40px;max-width:1400px;margin:0 auto;}
-  .filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);
-    border-radius:var(--radius);padding:14px 20px;margin-bottom:24px;
-    box-shadow:0 2px 8px rgba(0,0,0,.06);}
-  .filter-bar label{font-size:13px;font-weight:bold;color:var(--navy);}
-  .filter-bar select{padding:6px 12px;border:1px solid var(--border);border-radius:6px;
+  /* Filter bar */
+  .filter-bar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);
+    border-radius:var(--radius);padding:12px 18px;margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  .filter-bar label{font-size:12px;font-weight:bold;color:var(--navy);}
+  .filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;
     font-size:13px;background:var(--bg);}
 
-  .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:16px;margin-bottom:28px;}
-  .stat-card{background:var(--card);border-radius:var(--radius);padding:18px 16px;
+  /* Stats */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px;margin-bottom:24px;}
+  .stat-card{background:var(--card);border-radius:var(--radius);padding:16px;
     box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center;border-top:4px solid var(--blue);}
-  .stat-card .val{font-size:34px;font-weight:bold;color:var(--navy);}
-  .stat-card .lbl{font-size:12px;color:var(--muted);margin-top:4px;}
+  .stat-card .val{font-size:32px;font-weight:bold;color:var(--navy);}
+  .stat-card .lbl{font-size:11px;color:var(--muted);margin-top:3px;}
   .stat-card.green{border-top-color:var(--green);}
   .stat-card.orange{border-top-color:var(--accent);}
+  .stat-card.pink{border-top-color:var(--pink);}
 
-  .section-title{font-size:16px;font-weight:bold;color:var(--navy);margin:28px 0 14px;
+  /* Section title */
+  .section-title{font-size:15px;font-weight:bold;color:var(--navy);margin:24px 0 12px;
     display:flex;align-items:center;gap:8px;}
   .section-title::after{content:"";flex:1;height:2px;background:var(--light-blue);border-radius:2px;}
 
-  .chart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:28px;}
-  .chart-card{background:var(--card);border-radius:var(--radius);padding:20px;
+  /* Charts */
+  .chart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:24px;}
+  .chart-card{background:var(--card);border-radius:var(--radius);padding:18px;
     box-shadow:0 2px 8px rgba(0,0,0,.07);}
-  .chart-card h3{font-size:13px;font-weight:bold;color:var(--navy);margin-bottom:14px;}
-  .chart-card canvas{max-height:220px;}
+  .chart-card h3{font-size:12px;font-weight:bold;color:var(--navy);margin-bottom:12px;}
+  .chart-card canvas{max-height:210px;}
 
+  /* Table */
   .table-wrap{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:13px;}
-  th{background:var(--navy);color:#fff;padding:10px 14px;text-align:left;white-space:nowrap;}
-  td{padding:9px 14px;border-bottom:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;white-space:nowrap;}
+  td{padding:8px 12px;border-bottom:1px solid var(--border);}
   tr:nth-child(even) td{background:var(--light-blue);}
   tr:hover td{background:#c8d8ee;}
-  .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:bold;}
+  .badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:bold;}
   .badge-yes{background:#d4edda;color:#155724;}
   .badge-no{background:#f8d7da;color:#721c24;}
   .badge-none{background:#e2e3e5;color:#495057;}
-  .hr-bar{display:flex;gap:4px;}
-  .hr-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-size:10px;font-weight:bold;color:#fff;}
-  .hr-done{background:var(--green);}
-  .hr-todo{background:#ccc;}
-  .empty{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
+  .hr-bar{display:flex;gap:3px;}
+  .hr-dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:bold;color:#fff;}
+  .hr-done{background:var(--green);}  .hr-todo{background:#ccc;}
+  .empty{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
 
+  /* Modal */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;
     align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;}
   .modal{background:var(--card);border-radius:var(--radius);width:100%;max-width:620px;
-    max-height:90vh;overflow-y:auto;padding:28px 32px;position:relative;
+    max-height:90vh;overflow-y:auto;padding:26px 30px;position:relative;
     box-shadow:0 8px 32px rgba(0,0,0,.2);}
-  .modal h2{font-size:18px;color:var(--navy);margin-bottom:20px;}
-  .modal .close-btn{position:absolute;top:16px;right:20px;background:none;border:none;
-    font-size:22px;cursor:pointer;color:var(--muted);}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .modal h2{font-size:17px;color:var(--navy);margin-bottom:18px;}
+  .modal .close-btn{position:absolute;top:14px;right:18px;background:none;border:none;
+    font-size:20px;cursor:pointer;color:var(--muted);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .field{display:flex;flex-direction:column;gap:4px;}
-  .field label{font-size:12px;font-weight:bold;color:var(--navy);}
+  .field label{font-size:11px;font-weight:bold;color:var(--navy);}
   .field input,.field select{padding:8px 10px;border:1px solid var(--border);border-radius:6px;
     font-size:13px;background:var(--bg);}
   .field input:focus,.field select:focus{outline:2px solid var(--blue);border-color:var(--blue);}
-  .hr-checks{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;}
-  .hr-checks label{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
-  .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+  .hr-checks{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;}
+  .hr-checks label{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;}
+  .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+
+  /* Settings modal */
+  .settings-field{margin-bottom:16px;}
+  .settings-field label{display:block;font-size:12px;font-weight:bold;color:var(--navy);margin-bottom:5px;}
+  .settings-field input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;
+    font-size:13px;background:var(--bg);}
+  .settings-field input:focus{outline:2px solid var(--blue);border-color:var(--blue);}
+
+  /* Wednesday summary mini-stats */
+  .mini-stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 
   @media(max-width:600px){
-    header{flex-direction:column;gap:8px;}
-    #dashboard{padding:0 12px 32px;}
+    header{flex-direction:column;gap:8px;padding:14px 16px;}
+    #main{padding:16px 12px 40px;}
     .form-grid{grid-template-columns:1fr;}
+    .action-bar{flex-direction:column;align-items:flex-start;}
+    .mini-stat-grid{grid-template-columns:1fr 1fr;}
   }
 </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <h1>⛪ Unite180 — uGroup Area Dashboard</h1>
-    <p id="area-subtitle">Import your uGroup Excel files to get started</p>
-  </div>
-  <div style="display:flex;gap:10px;align-items:center;">
-    <button class="btn btn-green" id="header-add-btn" style="display:none" onclick="openModal()">+ Add Member</button>
-  </div>
-</header>
+<!-- ══════════════════ LOGIN SCREEN ══════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">⛪</div>
+    <h1>Unite180</h1>
+    <p>uGroup Area Dashboard</p>
 
-<div id="import-section" style="padding:0 32px;">
-  <div id="import-zone" onclick="document.getElementById('file-input').click()">
-    <div class="icon">📂</div>
-    <h2>Import uGroup Excel Files</h2>
-    <p>Click to select one or more Excel files (uGroup_Template.xlsx format)<br>
-    All 7 uGroup files can be imported at once</p>
-    <button class="btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Choose Files</button>
-    <div id="file-chips"></div>
-  </div>
-  <input type="file" id="file-input" accept=".xlsx,.xls" multiple/>
-  <div style="text-align:center;margin-top:12px;display:flex;gap:10px;justify-content:center;">
-    <button class="btn" id="load-btn" style="display:none" onclick="buildDashboard()">Load Dashboard →</button>
-    <button class="btn btn-outline" onclick="loadSampleData()">Load Sample Data</button>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Incorrect username or password.</div>
+    <p class="login-hint">Default: <strong>admin</strong> / <strong>Unite180!</strong><br>Change your password after first login via ⚙ Settings.</p>
   </div>
 </div>
 
-<div id="dashboard">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 16px;">
-    <h2 style="font-size:20px;color:var(--navy);">Area Overview</h2>
-    <div style="display:flex;gap:10px;">
-      <button class="btn btn-green" onclick="openModal()">+ Add Member</button>
-      <button class="btn btn-outline" onclick="resetDashboard()">← Import Files</button>
-      <button class="btn btn-red" onclick="clearAllData()" style="font-size:12px;padding:9px 14px;">🗑 Clear Data</button>
+<!-- ══════════════════ APP ══════════════════ -->
+<div id="app">
+  <header>
+    <div>
+      <h1>⛪ Unite180 — uGroup Area Dashboard</h1>
+      <p id="area-subtitle">Loading…</p>
     </div>
-  </div>
-
-  <div class="filter-bar">
-    <label>uGroup:</label>
-    <select id="filter-group" onchange="renderAll()"><option value="ALL">All Groups</option></select>
-    <label style="margin-left:12px;">Attendance Date:</label>
-    <select id="filter-date" onchange="renderAll()"><option value="ALL">All Dates</option></select>
-  </div>
-
-  <div class="stat-grid" id="stat-grid"></div>
-
-  <div class="section-title">📋 Demographics</div>
-  <div class="chart-grid">
-    <div class="chart-card"><h3>Gender Split</h3><canvas id="chart-gender"></canvas></div>
-    <div class="chart-card"><h3>Age Categories</h3><canvas id="chart-age"></canvas></div>
-    <div class="chart-card"><h3>Baptism Status</h3><canvas id="chart-baptism"></canvas></div>
-  </div>
-
-  <div class="section-title">📚 Spiritual Development</div>
-  <div class="chart-grid">
-    <div class="chart-card"><h3>Homerun Completion</h3><canvas id="chart-homerun"></canvas></div>
-    <div class="chart-card"><h3>USM Status</h3><canvas id="chart-usm"></canvas></div>
-    <div class="chart-card"><h3>Attendance per uGroup</h3><canvas id="chart-attendance-group"></canvas></div>
-  </div>
-
-  <div class="section-title">📅 This Wednesday</div>
-  <div class="chart-grid">
-    <div class="chart-card"><h3>Attendance This Wednesday — per uGroup</h3><canvas id="chart-this-wed"></canvas></div>
-    <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;">
-      <h3>This Wednesday Summary</h3>
-      <div id="wed-summary" style="margin-top:8px;"></div>
+    <div class="hdr-actions">
+      <button class="btn btn-green" onclick="openMemberModal()">+ Add Member</button>
+      <button class="btn btn-outline" onclick="openSettings()" style="color:#fff;border-color:rgba(255,255,255,.5);">⚙ Settings</button>
+      <button class="btn btn-outline" onclick="doLogout()" style="color:#fff;border-color:rgba(255,255,255,.5);">Sign Out</button>
     </div>
-  </div>
+  </header>
 
-  <div class="section-title">📅 Attendance Log</div>
-  <div class="chart-card">
-    <div class="table-wrap" id="attendance-table"></div>
-  </div>
+  <div id="main">
 
-  <div class="section-title" style="margin-top:28px;">
-    👥 Members
-    <span style="font-size:12px;font-weight:normal;color:var(--muted);margin-left:8px;" id="member-count"></span>
-  </div>
-  <div class="chart-card">
-    <div class="table-wrap" id="members-table"></div>
+    <!-- Import zone -->
+    <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <h3>📂 Import Excel Files</h3>
+      <p>Drag & drop uGroup_Template.xlsx files here, or click to browse — you can import all 7 uGroups at once</p>
+      <div id="file-chips"></div>
+      <input type="file" id="file-input" accept=".xlsx,.xls" multiple/>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <button class="btn" id="import-btn" style="display:none" onclick="importFiles()">✅ Import Selected Files</button>
+      <button class="btn btn-outline" onclick="loadSampleData()">Load Sample Data</button>
+      <button class="btn btn-red btn-sm" onclick="clearAllData()" style="margin-left:auto;">🗑 Clear All Data</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <label>uGroup:</label>
+      <select id="filter-group" onchange="renderAll()"><option value="ALL">All Groups</option></select>
+      <label style="margin-left:14px;">Attendance Date:</label>
+      <select id="filter-date" onchange="renderAll()"><option value="ALL">All Dates</option></select>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <!-- Demographics -->
+    <div class="section-title">📋 Demographics</div>
+    <div class="chart-grid">
+      <div class="chart-card"><h3>Gender Split</h3><canvas id="chart-gender"></canvas></div>
+      <div class="chart-card"><h3>Age Categories</h3><canvas id="chart-age"></canvas></div>
+      <div class="chart-card"><h3>Baptism Status</h3><canvas id="chart-baptism"></canvas></div>
+    </div>
+
+    <!-- Spiritual Development -->
+    <div class="section-title">📚 Spiritual Development</div>
+    <div class="chart-grid">
+      <div class="chart-card"><h3>Homerun Completion</h3><canvas id="chart-homerun"></canvas></div>
+      <div class="chart-card"><h3>USM Status</h3><canvas id="chart-usm"></canvas></div>
+      <div class="chart-card"><h3>Attendance per uGroup</h3><canvas id="chart-attendance-group"></canvas></div>
+    </div>
+
+    <!-- This Wednesday -->
+    <div class="section-title">📅 This Wednesday</div>
+    <div class="chart-grid">
+      <div class="chart-card" style="grid-column:span 2 / auto"><h3>Attendance per uGroup</h3><canvas id="chart-this-wed"></canvas></div>
+      <div class="chart-card">
+        <h3>Summary</h3>
+        <div id="wed-summary" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- Attendance log -->
+    <div class="section-title">🗓 Attendance Log</div>
+    <div class="chart-card">
+      <div class="table-wrap" id="attendance-table"></div>
+    </div>
+
+    <!-- Members -->
+    <div class="section-title" style="margin-top:24px;">
+      👥 Members
+      <span style="font-size:11px;font-weight:normal;color:var(--muted);margin-left:6px;" id="member-count"></span>
+    </div>
+    <div class="chart-card">
+      <div class="table-wrap" id="members-table"></div>
+    </div>
   </div>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modal-overlay">
+<!-- ── Add/Edit Member Modal ── -->
+<div class="modal-overlay" id="member-modal">
   <div class="modal">
-    <button class="close-btn" onclick="closeModal()">✕</button>
-    <h2 id="modal-title">➕ Add New Member</h2>
+    <button class="close-btn" onclick="closeMemberModal()">✕</button>
+    <h2 id="member-modal-title">➕ Add New Member</h2>
     <input type="hidden" id="edit-index" value="-1"/>
-
     <div class="form-grid">
       <div class="field">
         <label>uGroup Name *</label>
@@ -251,19 +346,15 @@
         <label>Age Category</label>
         <select id="f-agecat">
           <option value="">Auto-detect</option>
-          <option>Child</option>
-          <option>Youth</option>
-          <option>Young Adult</option>
-          <option>Adult</option>
-          <option>Senior</option>
+          <option>Child</option><option>Youth</option>
+          <option>Young Adult</option><option>Adult</option><option>Senior</option>
         </select>
       </div>
       <div class="field">
         <label>Baptised</label>
         <select id="f-baptised">
           <option value="">Select…</option>
-          <option>Yes</option>
-          <option>No</option>
+          <option>Yes</option><option>No</option>
         </select>
       </div>
       <div class="field">
@@ -276,8 +367,7 @@
         </select>
       </div>
     </div>
-
-    <div class="field" style="margin-top:14px;">
+    <div class="field" style="margin-top:12px;">
       <label>Homerun Completed</label>
       <div class="hr-checks">
         <label><input type="checkbox" id="f-hr1"/> Homerun 1</label>
@@ -286,27 +376,114 @@
         <label><input type="checkbox" id="f-hr4"/> Homerun 4</label>
       </div>
     </div>
-
-    <div class="field" style="margin-top:14px;">
+    <div class="field" style="margin-top:12px;">
       <label>Notes</label>
       <input id="f-notes" placeholder="Optional notes"/>
     </div>
-
     <div class="form-actions">
-      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-outline" onclick="closeMemberModal()">Cancel</button>
       <button class="btn btn-green" onclick="saveMember()">Save Member</button>
     </div>
   </div>
 </div>
 
-<script>
-let allMembers=[], allAttendance=[], loadedFiles=[], chartInstances={};
+<!-- ── Settings Modal ── -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal" style="max-width:420px;">
+    <button class="close-btn" onclick="closeSettings()">✕</button>
+    <h2>⚙ Settings</h2>
+    <div class="settings-field">
+      <label>Username</label>
+      <input type="text" id="s-username" placeholder="New username"/>
+    </div>
+    <div class="settings-field">
+      <label>New Password</label>
+      <input type="password" id="s-password" placeholder="Leave blank to keep current"/>
+    </div>
+    <div class="settings-field">
+      <label>Confirm New Password</label>
+      <input type="password" id="s-password2" placeholder="Repeat new password"/>
+    </div>
+    <div id="settings-msg" style="font-size:13px;margin-top:4px;"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-green" onclick="saveSettings()">Save Changes</button>
+    </div>
+  </div>
+</div>
 
-// ── Persistence ───────────────────────────────────────────────────────────
+<script>
+// ══════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════
+function getCredentials(){
+  return{
+    user: localStorage.getItem('ug_user')||'admin',
+    pass: localStorage.getItem('ug_pass')||'Unite180!'
+  };
+}
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const creds=getCredentials();
+  const err=document.getElementById('login-error');
+  if(u===creds.user && p===creds.pass){
+    err.style.display='none';
+    localStorage.setItem('ug_session','1');
+    showApp();
+  }else{
+    err.style.display='block';
+    document.getElementById('login-pass').value='';
+  }
+}
+function doLogout(){
+  if(!confirm('Sign out?')) return;
+  localStorage.removeItem('ug_session');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+}
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadFromStorage();
+  populateFilters();
+  updateSubtitle();
+  renderAll();
+}
+
+// ── Settings ──
+function openSettings(){
+  document.getElementById('s-username').value=getCredentials().user;
+  document.getElementById('s-password').value='';
+  document.getElementById('s-password2').value='';
+  document.getElementById('settings-msg').textContent='';
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings(){ document.getElementById('settings-modal').classList.remove('open'); }
+function saveSettings(){
+  const u=document.getElementById('s-username').value.trim();
+  const p=document.getElementById('s-password').value;
+  const p2=document.getElementById('s-password2').value;
+  const msg=document.getElementById('settings-msg');
+  if(!u){msg.style.color='var(--red)';msg.textContent='Username cannot be empty.';return;}
+  if(p && p!==p2){msg.style.color='var(--red)';msg.textContent='Passwords do not match.';return;}
+  localStorage.setItem('ug_user',u);
+  if(p) localStorage.setItem('ug_pass',p);
+  msg.style.color='var(--green)';msg.textContent='✅ Saved!';
+  setTimeout(closeSettings,1200);
+}
+
+// ══════════════════════════════════════════════════════
+// STATE & PERSISTENCE
+// ══════════════════════════════════════════════════════
+let allMembers=[], allAttendance=[], pendingFiles=[], chartInstances={};
+
 function saveToStorage(){
   try{
-    localStorage.setItem('ugroup_members', JSON.stringify(allMembers));
-    localStorage.setItem('ugroup_attendance', JSON.stringify(allAttendance));
+    localStorage.setItem('ugroup_members',JSON.stringify(allMembers));
+    localStorage.setItem('ugroup_attendance',JSON.stringify(allAttendance));
   }catch(e){}
 }
 function loadFromStorage(){
@@ -317,80 +494,85 @@ function loadFromStorage(){
     if(a) allAttendance=JSON.parse(a);
   }catch(e){}
 }
-
-// Load on startup
-loadFromStorage();
-if(allMembers.length||allAttendance.length){ finishBuild(); }
-
-document.getElementById('file-input').addEventListener('change', function(e) {
-  Array.from(e.target.files).forEach(f => {
-    if (!loadedFiles.find(x=>x.name===f.name)) loadedFiles.push(f);
-  });
-  refreshChips();
-  document.getElementById('load-btn').style.display=loadedFiles.length?'inline-block':'none';
-  e.target.value='';
-});
-
-const iz=document.getElementById('import-zone');
-iz.addEventListener('dragover',e=>{e.preventDefault();iz.style.background='#c0d4ec';});
-iz.addEventListener('dragleave',()=>iz.style.background='');
-iz.addEventListener('drop',e=>{
-  e.preventDefault();iz.style.background='';
-  Array.from(e.dataTransfer.files).forEach(f=>{
-    if(!loadedFiles.find(x=>x.name===f.name)) loadedFiles.push(f);
-  });
-  refreshChips();
-  document.getElementById('load-btn').style.display=loadedFiles.length?'inline-block':'none';
-});
-
-function refreshChips(){
-  document.getElementById('file-chips').innerHTML=loadedFiles.map((f,i)=>
-    `<span class="chip">📄 ${f.name} <span class="remove" onclick="removeFile(${i})">✕</span></span>`
-  ).join('');
-}
-function removeFile(i){
-  loadedFiles.splice(i,1);refreshChips();
-  document.getElementById('load-btn').style.display=loadedFiles.length?'inline-block':'none';
-}
 function clearAllData(){
-  if(!confirm('This will permanently delete all member and attendance data. Are you sure?')) return;
+  if(!confirm('Delete ALL member and attendance data? This cannot be undone.')) return;
   allMembers=[];allAttendance=[];
   localStorage.removeItem('ugroup_members');
   localStorage.removeItem('ugroup_attendance');
-  resetDashboard();
+  populateFilters();updateSubtitle();renderAll();
 }
 
-function resetDashboard(){
-  loadedFiles=[];allMembers=[];allAttendance=[];refreshChips();
-  document.getElementById('load-btn').style.display='none';
-  document.getElementById('import-section').style.display='block';
-  document.getElementById('dashboard').style.display='none';
-  document.getElementById('header-add-btn').style.display='none';
-  document.getElementById('area-subtitle').textContent='Import your uGroup Excel files to get started';
-}
+// ══════════════════════════════════════════════════════
+// FILE IMPORT
+// ══════════════════════════════════════════════════════
+const dz=document.getElementById('drop-zone');
+document.getElementById('file-input').addEventListener('change',function(e){
+  Array.from(e.target.files).forEach(f=>{
+    if(!pendingFiles.find(x=>x.name===f.name)) pendingFiles.push(f);
+  });
+  refreshChips(); e.target.value='';
+});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag-over');
+  Array.from(e.dataTransfer.files).forEach(f=>{
+    if(!pendingFiles.find(x=>x.name===f.name)) pendingFiles.push(f);
+  });
+  refreshChips();
+});
 
-async function buildDashboard(){
-  allMembers=[];allAttendance=[];
-  for(const file of loadedFiles) await parseFile(file);
-  finishBuild();
+function refreshChips(){
+  document.getElementById('file-chips').innerHTML=pendingFiles.map((f,i)=>
+    `<span class="chip">📄 ${f.name} <span class="remove" onclick="removeChip(${i});event.stopPropagation()">✕</span></span>`
+  ).join('');
+  document.getElementById('import-btn').style.display=pendingFiles.length?'inline-flex':'none';
+}
+function removeChip(i){pendingFiles.splice(i,1);refreshChips();}
+
+async function importFiles(){
+  if(!pendingFiles.length) return;
+  let added=0;
+  for(const file of pendingFiles){
+    const res=await parseFile(file);
+    added+=res;
+  }
+  pendingFiles=[];refreshChips();
+  saveToStorage();populateFilters();updateSubtitle();renderAll();
+  alert(`✅ Import complete. ${added} new records merged in.`);
 }
 
 function parseFile(file){
   return new Promise(resolve=>{
     const reader=new FileReader();
     reader.onload=e=>{
+      let added=0;
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       const mSheet=wb.Sheets['Members'];
       if(mSheet){
         const rows=XLSX.utils.sheet_to_json(mSheet,{defval:'',range:1});
-        rows.forEach(r=>{const n=normalize(r);if(n.name) allMembers.push(n);});
+        rows.forEach(r=>{
+          const n=normalizeMember(r);
+          if(n.name){
+            // Merge: update existing by name+ugroup, or add new
+            const idx=allMembers.findIndex(m=>m.name===n.name&&m.ugroup===n.ugroup);
+            if(idx>=0) allMembers[idx]={...allMembers[idx],...n};
+            else{allMembers.push(n);added++;}
+          }
+        });
       }
       const aSheet=wb.Sheets['Attendance'];
       if(aSheet){
         const rows=XLSX.utils.sheet_to_json(aSheet,{defval:'',range:1});
-        rows.forEach(r=>{const n=normalizeAtt(r);if(n.name) allAttendance.push(n);});
+        rows.forEach(r=>{
+          const n=normalizeAtt(r);
+          if(n.name&&n.date){
+            const exists=allAttendance.find(a=>a.name===n.name&&a.date===n.date&&a.ugroup===n.ugroup);
+            if(!exists){allAttendance.push(n);added++;}
+          }
+        });
       }
-      resolve();
+      resolve(added);
     };
     reader.readAsArrayBuffer(file);
   });
@@ -398,7 +580,7 @@ function parseFile(file){
 
 function str(v){return String(v||'').trim();}
 
-function normalize(r){
+function normalizeMember(r){
   const age=parseInt(r['Age'])||calcAge(r['Date of Birth']);
   return{
     ugroup:str(r['uGroup Name']),leader:str(r['Leader Name']),name:str(r['Member Name']),
@@ -409,7 +591,6 @@ function normalize(r){
     usm:str(r['USM Status']||r['USM']||'None'),notes:str(r['Notes']),
   };
 }
-
 function normalizeAtt(r){
   let d=r['Date']||'';
   if(d instanceof Date) d=d.toLocaleDateString('en-ZA');
@@ -418,7 +599,6 @@ function normalizeAtt(r){
   return{date:d,ugroup:str(r['uGroup Name']),leader:str(r['Leader Name']),
     name:str(r['Member Name']),role:str(r['Role']),present:str(r['Present'])};
 }
-
 function calcAge(dob){
   if(!dob) return null;
   let d;
@@ -427,16 +607,13 @@ function calcAge(dob){
   else{d=new Date(dob);if(isNaN(d)) return null;}
   return Math.floor((Date.now()-d.getTime())/(365.25*24*3600*1000));
 }
-
-function ageCategory(age){
-  if(!age) return'';
-  if(age<13) return'Child';
-  if(age<=25) return'Youth';
-  if(age<=35) return'Young Adult';
-  if(age<=50) return'Adult';
-  return'Senior';
+function ageCategory(a){
+  if(!a) return'';
+  if(a<13) return'Child';if(a<=25) return'Youth';
+  if(a<=35) return'Young Adult';if(a<=50) return'Adult';return'Senior';
 }
 
+// ── Sample data ──
 function loadSampleData(){
   const groups=['Grace Cell','Hope Cell','Faith Cell','Joy Cell','Peace Cell','Love Cell','Light Cell'];
   const leaders=['Cornu du Toit','Jaden Viljoen','Johandre Combrinck','Karabo Moloto','Ntando Ngobe','Shaldon Cloete','Siyabonga Nhlonipho'];
@@ -447,14 +624,13 @@ function loadSampleData(){
   const ages=[16,18,21,24,27,30,34,38,42,47,52,58,19,23,29,33,45];
   const usms=['None','None','None','Year 1','Year 2','Completed'];
   const yn=()=>Math.random()>.3?'Yes':'No';
-
   allMembers=[];
   groups.forEach((g,gi)=>{
     const leader=leaders[gi];
     allMembers.push({ugroup:g,leader,name:leader,role:'Leader',gender:'Male',
       age:35,agecat:'Adult',baptised:'Yes',hr1:'Yes',hr2:'Yes',hr3:'Yes',hr4:'Yes',usm:'Completed',notes:''});
-    allMembers.push({ugroup:g,leader,name:names[Math.floor(Math.random()*names.length)],role:'Assistant Leader',
-      gender:genders[Math.floor(Math.random()*2)],age:28,agecat:'Young Adult',
+    allMembers.push({ugroup:g,leader,name:names[Math.floor(Math.random()*names.length)],
+      role:'Assistant Leader',gender:genders[Math.floor(Math.random()*2)],age:28,agecat:'Young Adult',
       baptised:'Yes',hr1:'Yes',hr2:'Yes',hr3:yn(),hr4:yn(),
       usm:usms[Math.floor(Math.random()*usms.length)],notes:''});
     for(let m=0;m<8+Math.floor(Math.random()*6);m++){
@@ -466,7 +642,6 @@ function loadSampleData(){
         usm:usms[Math.floor(Math.random()*usms.length)],notes:''});
     }
   });
-
   allAttendance=[];
   const weds=[];let d=new Date();
   while(weds.length<4){if(d.getDay()===3)weds.push(new Date(d));d.setDate(d.getDate()-1);}
@@ -478,58 +653,40 @@ function loadSampleData(){
           name:m.name,role:m.role,present:Math.random()>.2?'Yes':'No'});
     });
   });
-  finishBuild();
+  saveToStorage();populateFilters();updateSubtitle();renderAll();
 }
 
-function finishBuild(){
-  if(!allMembers.length&&!allAttendance.length){
-    alert('No data found. Make sure your file uses the uGroup_Template.xlsx format (column headers must be in row 2).');
-    return;
-  }
-  saveToStorage();
-  populateFilters();
-  document.getElementById('import-section').style.display='none';
-  document.getElementById('dashboard').style.display='block';
-  document.getElementById('header-add-btn').style.display='inline-block';
-  updateSubtitle();renderAll();
-}
-
+// ══════════════════════════════════════════════════════
+// FILTERS & RENDER
+// ══════════════════════════════════════════════════════
 function updateSubtitle(){
-  const groups=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].length;
-  document.getElementById('area-subtitle').textContent=`${groups} uGroups · ${allMembers.length} members`;
+  const g=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].length;
+  document.getElementById('area-subtitle').textContent=`${g} uGroups · ${allMembers.length} members`;
 }
-
 function populateFilters(){
   const groups=['ALL',...[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort()];
   const dates=['ALL',...[...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort().reverse()];
   document.getElementById('filter-group').innerHTML=groups.map(g=>`<option value="${g}">${g==='ALL'?'All Groups':g}</option>`).join('');
   document.getElementById('filter-date').innerHTML=dates.map(d=>`<option value="${d}">${d==='ALL'?'All Dates':d}</option>`).join('');
 }
-
 function getF(){return{group:document.getElementById('filter-group').value,date:document.getElementById('filter-date').value};}
-function filteredMembers(){const f=getF();return allMembers.filter(m=>(f.group==='ALL'||m.ugroup===f.group)&&m.name);}
-function filteredAttendance(){const f=getF();return allAttendance.filter(a=>(f.group==='ALL'||a.ugroup===f.group)&&(f.date==='ALL'||a.date===f.date)&&a.name);}
+function fMembers(){const f=getF();return allMembers.filter(m=>(f.group==='ALL'||m.ugroup===f.group)&&m.name);}
+function fAtt(){const f=getF();return allAttendance.filter(a=>(f.group==='ALL'||a.ugroup===f.group)&&(f.date==='ALL'||a.date===f.date)&&a.name);}
 
 function renderAll(){
-  const members=filteredMembers(),att=filteredAttendance();
-  renderStats(members,att);
-  renderChart('chart-gender',buildGenderData(members));
-  renderChart('chart-age',buildAgeData(members));
-  renderChart('chart-baptism',buildBaptismData(members));
-  renderChart('chart-homerun',buildHomerumData(members));
-  renderChart('chart-usm',buildUsmData(members));
-  renderChart('chart-attendance-group',buildAttGroupData(att));
-  renderThisWednesday();
-  renderAttTable(att);renderMembersTable(members);
+  const m=fMembers(),a=fAtt();
+  renderStats(m,a);
+  rc('chart-gender',genderData(m));rc('chart-age',ageData(m));rc('chart-baptism',baptismData(m));
+  rc('chart-homerun',homerumData(m));rc('chart-usm',usmData(m));rc('chart-attendance-group',attGroupData(a));
+  renderWednesday();renderAttTable(a);renderMembersTable(m);
 }
 
-function renderStats(members,att){
-  const total=members.length;
-  const groups=[...new Set(members.map(m=>m.ugroup).filter(Boolean))].length;
-  const baptised=members.filter(m=>m.baptised.toLowerCase()==='yes').length;
-  const present=att.filter(a=>a.present.toLowerCase()==='yes').length;
-  const usmActive=members.filter(m=>m.usm==='Year 1'||m.usm==='Year 2').length;
-  const hrdone=members.filter(m=>m.hr4.toLowerCase()==='yes').length;
+function renderStats(m,a){
+  const total=m.length,groups=[...new Set(m.map(x=>x.ugroup).filter(Boolean))].length;
+  const baptised=m.filter(x=>x.baptised.toLowerCase()==='yes').length;
+  const present=a.filter(x=>x.present.toLowerCase()==='yes').length;
+  const usmActive=m.filter(x=>x.usm==='Year 1'||x.usm==='Year 2').length;
+  const hrdone=m.filter(x=>x.hr4.toLowerCase()==='yes').length;
   const cards=[
     {val:groups,lbl:'uGroups',cls:''},
     {val:total,lbl:'Total Members',cls:''},
@@ -544,7 +701,8 @@ function renderStats(members,att){
   ).join('');
 }
 
-function buildGenderData(m){
+// Chart builders
+function genderData(m){
   const male=m.filter(x=>x.gender.toLowerCase()==='male').length;
   const female=m.filter(x=>x.gender.toLowerCase()==='female').length;
   const other=m.length-male-female;
@@ -553,75 +711,102 @@ function buildGenderData(m){
   return{type:'doughnut',data:{labels:lbls,datasets:[{data,backgroundColor:['#2E75B6','#E75480','#aaa'],borderWidth:2}]},
     options:{plugins:{legend:{position:'bottom'}},maintainAspectRatio:true}};
 }
-function buildAgeData(m){
+function ageData(m){
   const cats=['Child','Youth','Young Adult','Adult','Senior'];
-  const counts=cats.map(c=>m.filter(x=>x.agecat===c).length);
-  return{type:'bar',data:{labels:cats,datasets:[{label:'Members',data:counts,
+  return{type:'bar',data:{labels:cats,datasets:[{label:'Members',data:cats.map(c=>m.filter(x=>x.agecat===c).length),
     backgroundColor:['#5B9BD5','#2E75B6','#1A3C6E','#E8A020','#8B4513'],borderRadius:6}]},
     options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:true}};
 }
-function buildBaptismData(m){
+function baptismData(m){
   const yes=m.filter(x=>x.baptised.toLowerCase()==='yes').length;
   return{type:'doughnut',data:{labels:['Baptised','Not Yet'],datasets:[{data:[yes,m.length-yes],
     backgroundColor:['#217346','#C0392B'],borderWidth:2}]},
     options:{plugins:{legend:{position:'bottom'}},maintainAspectRatio:true}};
 }
-function buildHomerumData(m){
+function homerumData(m){
   const keys=['hr1','hr2','hr3','hr4'];
-  const counts=keys.map(k=>m.filter(x=>x[k].toLowerCase()==='yes').length);
   return{type:'bar',data:{labels:['Homerun 1','Homerun 2','Homerun 3','Homerun 4'],
-    datasets:[{label:'Completed',data:counts,backgroundColor:['#2E75B6','#1A3C6E','#217346','#E8A020'],borderRadius:6}]},
+    datasets:[{label:'Completed',data:keys.map(k=>m.filter(x=>x[k].toLowerCase()==='yes').length),
+    backgroundColor:['#2E75B6','#1A3C6E','#217346','#E8A020'],borderRadius:6}]},
     options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:true}};
 }
-function buildUsmData(m){
+function usmData(m){
   const cats=['None','Year 1','Year 2','Completed'];
-  const counts=cats.map(c=>m.filter(x=>(x.usm||'None')===c).length);
-  return{type:'doughnut',data:{labels:cats,datasets:[{data:counts,
+  return{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>m.filter(x=>(x.usm||'None')===c).length),
     backgroundColor:['#aaa','#2E75B6','#1A3C6E','#217346'],borderWidth:2}]},
     options:{plugins:{legend:{position:'bottom'}},maintainAspectRatio:true}};
 }
-function buildAttGroupData(att){
-  const groups=[...new Set(att.map(a=>a.ugroup).filter(Boolean))].sort();
+function attGroupData(a){
+  const groups=[...new Set(a.map(x=>x.ugroup).filter(Boolean))].sort();
   return{type:'bar',data:{labels:groups,datasets:[
-    {label:'Present',data:groups.map(g=>att.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='yes').length),backgroundColor:'#217346',borderRadius:4},
-    {label:'Absent',data:groups.map(g=>att.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='no').length),backgroundColor:'#C0392B',borderRadius:4}
+    {label:'Present',data:groups.map(g=>a.filter(x=>x.ugroup===g&&x.present.toLowerCase()==='yes').length),backgroundColor:'#217346',borderRadius:4},
+    {label:'Absent', data:groups.map(g=>a.filter(x=>x.ugroup===g&&x.present.toLowerCase()==='no').length), backgroundColor:'#C0392B',borderRadius:4}
   ]},options:{plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}},maintainAspectRatio:true}};
 }
 
-function renderChart(id,config){
+function rc(id,config){
   if(chartInstances[id]) chartInstances[id].destroy();
   const ctx=document.getElementById(id);
   if(ctx) chartInstances[id]=new Chart(ctx,config);
 }
 
-function renderAttTable(att){
+function getThisWednesday(){
+  const d=new Date(),day=d.getDay(),diff=day>=3?day-3:day+4;
+  d.setDate(d.getDate()-diff);return d.toLocaleDateString('en-ZA');
+}
+function renderWednesday(){
+  const wedDate=getThisWednesday();
+  const f=getF();
+  const avail=[...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort().reverse();
+  const useDate=allAttendance.find(a=>a.date===wedDate)?wedDate:(avail[0]||null);
+  const wa=allAttendance.filter(a=>a.date===useDate&&(f.group==='ALL'||a.ugroup===f.group));
+  const groups=[...new Set(allAttendance.map(a=>a.ugroup).filter(Boolean))].sort();
+  const present=groups.map(g=>wa.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='yes').length);
+  const absent =groups.map(g=>wa.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='no').length);
+  const tp=present.reduce((a,b)=>a+b,0),tr=wa.length;
+  rc('chart-this-wed',{type:'bar',data:{labels:groups,datasets:[
+    {label:'Present',data:present,backgroundColor:'#217346',borderRadius:6},
+    {label:'Absent', data:absent, backgroundColor:'#C0392B',borderRadius:6},
+  ]},options:{plugins:{legend:{position:'bottom'},title:{display:!!useDate,text:useDate?`Date: ${useDate}`:''}},
+    scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:true}});
+  const sd=document.getElementById('wed-summary');
+  if(!useDate||!tr){sd.innerHTML='<p class="empty" style="padding:16px">No Wednesday attendance recorded yet.</p>';return;}
+  const pct=Math.round(tp/tr*100);
+  sd.innerHTML=`
+    <div class="mini-stat-grid">
+      <div class="stat-card green" style="margin:0"><div class="val">${tp}</div><div class="lbl">Present</div></div>
+      <div class="stat-card" style="margin:0;border-top-color:var(--red)"><div class="val">${tr-tp}</div><div class="lbl">Absent</div></div>
+      <div class="stat-card" style="margin:0"><div class="val">${pct}%</div><div class="lbl">Rate</div></div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;">
+      ${useDate===wedDate?'This Wednesday':'Latest recorded'}: ${useDate}
+    </p>`;
+}
+
+function renderAttTable(a){
   const div=document.getElementById('attendance-table');
-  if(!att.length){div.innerHTML='<p class="empty">No attendance records for this selection.</p>';return;}
-  const rows=att.slice(0,200).map(a=>
-    `<tr><td>${a.date}</td><td>${a.ugroup}</td><td>${a.name}</td><td>${a.role}</td><td>${badge(a.present)}</td></tr>`
-  ).join('');
-  div.innerHTML=`<table><thead><tr><th>Date</th><th>uGroup</th><th>Member</th><th>Role</th><th>Present</th></tr></thead><tbody>${rows}</tbody></table>
-  ${att.length>200?`<p style="font-size:12px;color:var(--muted);padding:8px">Showing 200 of ${att.length} — use filters to narrow down.</p>`:''}`;
+  if(!a.length){div.innerHTML='<p class="empty">No attendance records.</p>';return;}
+  div.innerHTML=`<table><thead><tr><th>Date</th><th>uGroup</th><th>Member</th><th>Role</th><th>Present</th></tr></thead>
+    <tbody>${a.slice(0,200).map(x=>`<tr><td>${x.date}</td><td>${x.ugroup}</td><td>${x.name}</td><td>${x.role}</td><td>${badge(x.present)}</td></tr>`).join('')}</tbody></table>
+    ${a.length>200?`<p style="font-size:11px;color:var(--muted);padding:8px">Showing 200 of ${a.length} — filter to narrow down.</p>`:''}`;
 }
 
 function renderMembersTable(members){
   const div=document.getElementById('members-table');
   document.getElementById('member-count').textContent=`(${members.length})`;
   if(!members.length){div.innerHTML='<p class="empty">No members found.</p>';return;}
-  const rows=members.map(m=>
-    `<tr>
+  div.innerHTML=`<table><thead><tr><th>uGroup</th><th>Name</th><th>Role</th><th>Gender</th><th>Age</th><th>Category</th><th>Baptised</th><th>Homerun</th><th>USM</th><th></th></tr></thead>
+    <tbody>${members.map(m=>`<tr>
       <td>${m.ugroup}</td><td>${m.name}</td><td>${m.role}</td>
       <td>${m.gender}</td><td>${m.age||'—'}</td><td>${m.agecat||'—'}</td>
       <td>${badge(m.baptised)}</td>
       <td><div class="hr-bar">${[m.hr1,m.hr2,m.hr3,m.hr4].map((v,j)=>
-        `<div class="hr-dot ${v.toLowerCase()==='yes'?'hr-done':'hr-todo'}" title="HR${j+1}">${j+1}</div>`
-      ).join('')}</div></td>
+        `<div class="hr-dot ${v.toLowerCase()==='yes'?'hr-done':'hr-todo'}" title="HR${j+1}">${j+1}</div>`).join('')}</div></td>
       <td>${m.usm||'—'}</td>
-      <td><button class="btn" style="padding:4px 10px;font-size:11px" onclick="editMember(${allMembers.indexOf(m)})">Edit</button>
-          <button class="btn btn-red" style="padding:4px 10px;font-size:11px;margin-left:4px" onclick="deleteMember(${allMembers.indexOf(m)})">Del</button></td>
-    </tr>`
-  ).join('');
-  div.innerHTML=`<table><thead><tr><th>uGroup</th><th>Name</th><th>Role</th><th>Gender</th><th>Age</th><th>Category</th><th>Baptised</th><th>Homerun</th><th>USM</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm" onclick="editMember(${allMembers.indexOf(m)})">Edit</button>
+        <button class="btn btn-red btn-sm" style="margin-left:4px" onclick="delMember(${allMembers.indexOf(m)})">Del</button>
+      </td></tr>`).join('')}</tbody></table>`;
 }
 
 function badge(v){
@@ -631,11 +816,14 @@ function badge(v){
   return`<span class="badge badge-none">—</span>`;
 }
 
-function openModal(idx=-1){
+// ══════════════════════════════════════════════════════
+// MEMBER MODAL
+// ══════════════════════════════════════════════════════
+function openMemberModal(idx=-1){
   document.getElementById('edit-index').value=idx;
-  document.getElementById('modal-title').textContent=idx>=0?'✏️ Edit Member':'➕ Add New Member';
-  const dl=document.getElementById('ugroup-list');
-  dl.innerHTML=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].map(g=>`<option value="${g}">`).join('');
+  document.getElementById('member-modal-title').textContent=idx>=0?'✏️ Edit Member':'➕ Add New Member';
+  document.getElementById('ugroup-list').innerHTML=
+    [...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].map(g=>`<option value="${g}">`).join('');
   if(idx>=0){
     const m=allMembers[idx];
     document.getElementById('f-ugroup').value=m.ugroup;
@@ -643,14 +831,11 @@ function openModal(idx=-1){
     document.getElementById('f-name').value=m.name;
     document.getElementById('f-role').value=m.role;
     document.getElementById('f-gender').value=m.gender;
-    document.getElementById('f-dob').value=m.dob?(m.dob instanceof Date?m.dob.toISOString().split('T')[0]:''):'';
+    document.getElementById('f-dob').value=m.dob&&!(m.dob instanceof Date)?m.dob:'';
     document.getElementById('f-agecat').value=m.agecat||'';
     document.getElementById('f-baptised').value=m.baptised;
     document.getElementById('f-usm').value=m.usm||'None';
-    document.getElementById('f-hr1').checked=m.hr1.toLowerCase()==='yes';
-    document.getElementById('f-hr2').checked=m.hr2.toLowerCase()==='yes';
-    document.getElementById('f-hr3').checked=m.hr3.toLowerCase()==='yes';
-    document.getElementById('f-hr4').checked=m.hr4.toLowerCase()==='yes';
+    ['hr1','hr2','hr3','hr4'].forEach(k=>document.getElementById('f-'+k).checked=m[k].toLowerCase()==='yes');
     document.getElementById('f-notes').value=m.notes;
   }else{
     ['f-ugroup','f-name','f-dob','f-notes'].forEach(id=>document.getElementById(id).value='');
@@ -658,12 +843,11 @@ function openModal(idx=-1){
     document.getElementById('f-usm').value='None';
     ['f-hr1','f-hr2','f-hr3','f-hr4'].forEach(id=>document.getElementById(id).checked=false);
   }
-  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('member-modal').classList.add('open');
 }
-
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
-
-document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+function closeMemberModal(){document.getElementById('member-modal').classList.remove('open');}
+document.getElementById('member-modal').addEventListener('click',function(e){if(e.target===this)closeMemberModal();});
+document.getElementById('settings-modal').addEventListener('click',function(e){if(e.target===this)closeSettings();});
 
 function saveMember(){
   const name=document.getElementById('f-name').value.trim();
@@ -686,67 +870,19 @@ function saveMember(){
   };
   const idx=parseInt(document.getElementById('edit-index').value);
   if(idx>=0) allMembers[idx]=m; else allMembers.push(m);
-  saveToStorage();
-  closeModal();populateFilters();updateSubtitle();renderAll();
+  saveToStorage();closeMemberModal();populateFilters();updateSubtitle();renderAll();
+}
+function editMember(idx){openMemberModal(idx);}
+function delMember(idx){
+  if(!confirm(`Remove "${allMembers[idx].name}"?`)) return;
+  allMembers.splice(idx,1);saveToStorage();populateFilters();updateSubtitle();renderAll();
 }
 
-function getThisWednesday(){
-  const d=new Date();
-  const day=d.getDay();
-  // Go back to most recent Wednesday (day 3)
-  const diff=day>=3?day-3:day+4;
-  d.setDate(d.getDate()-diff);
-  return d.toLocaleDateString('en-ZA');
-}
-
-function renderThisWednesday(){
-  const wedDate=getThisWednesday();
-  const f=getF();
-
-  // Find closest available date if this wednesday has no data
-  const availDates=[...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort().reverse();
-  const useDate = allAttendance.find(a=>a.date===wedDate) ? wedDate : (availDates[0]||null);
-
-  const wedAtt=allAttendance.filter(a=>a.date===useDate&&(f.group==='ALL'||a.ugroup===f.group));
-  const groups=[...new Set(allAttendance.map(a=>a.ugroup).filter(Boolean))].sort();
-  const present=groups.map(g=>wedAtt.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='yes').length);
-  const absent =groups.map(g=>wedAtt.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='no').length);
-
-  const totalPresent=present.reduce((a,b)=>a+b,0);
-  const totalRecorded=wedAtt.length;
-
-  renderChart('chart-this-wed',{type:'bar',
-    data:{labels:groups,datasets:[
-      {label:'Present',data:present,backgroundColor:'#217346',borderRadius:6},
-      {label:'Absent', data:absent, backgroundColor:'#C0392B',borderRadius:6},
-    ]},
-    options:{plugins:{legend:{position:'bottom'},title:{display:true,text:useDate?`Date: ${useDate}`:'No data yet'}},
-      scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:true}
-  });
-
-  const summaryDiv=document.getElementById('wed-summary');
-  if(!useDate||totalRecorded===0){
-    summaryDiv.innerHTML='<p class="empty" style="padding:16px">No Wednesday attendance recorded yet.</p>';
-    return;
-  }
-  const pct=totalRecorded>0?Math.round(totalPresent/totalRecorded*100):0;
-  summaryDiv.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="stat-card green" style="margin:0"><div class="val">${totalPresent}</div><div class="lbl">Present</div></div>
-      <div class="stat-card red"   style="margin:0;border-top-color:var(--red)"><div class="val">${totalRecorded-totalPresent}</div><div class="lbl">Absent</div></div>
-      <div class="stat-card"       style="margin:0;grid-column:span 2"><div class="val">${pct}%</div><div class="lbl">Attendance Rate</div></div>
-    </div>
-    <p style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">
-      ${useDate===wedDate?'This Wednesday':'Most recent recorded: '} ${useDate}
-    </p>`;
-}
-
-function editMember(idx){openModal(idx);}
-function deleteMember(idx){
-  if(!confirm(`Remove "${allMembers[idx].name}" from the list?`)) return;
-  allMembers.splice(idx,1);
-  saveToStorage();
-  populateFilters();updateSubtitle();renderAll();
+// ══════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════
+if(localStorage.getItem('ug_session')==='1'){
+  showApp();
 }
 </script>
 </body>
