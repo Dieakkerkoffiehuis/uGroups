@@ -6,6 +6,7 @@
 <title>Unite180 — uGroup Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -414,14 +415,14 @@ tbody tr:hover td{background:var(--surface-hover);}
     <div class="login-logo">⛪</div>
     <h1>Unite180</h1>
     <p>uGroup Area Dashboard</p>
-    <div class="lf"><label>Username</label>
-      <input id="login-user" type="text" placeholder="admin" autocomplete="username"/></div>
+    <div class="lf"><label>Email</label>
+      <input id="login-user" type="email" placeholder="your@email.com" autocomplete="email"/></div>
     <div class="lf"><label>Password</label>
       <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"
         onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <button class="login-btn" onclick="doLogin()">Sign in →</button>
-    <div class="login-err" id="login-err">Incorrect username or password.</div>
-    <p class="login-hint">Default: <strong>admin</strong> / <strong>Unite180!</strong></p>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in →</button>
+    <div class="login-err" id="login-err">Incorrect email or password.</div>
+    <p class="login-hint">Use the email &amp; password you created in Supabase Auth.</p>
   </div>
 </div>
 
@@ -699,83 +700,111 @@ tbody tr:hover td{background:var(--surface-hover);}
   <div class="modal" style="max-width:380px;">
     <button class="close-btn" onclick="closeSettings()">✕</button>
     <h2>Settings</h2>
-    <div class="settings-field"><label>Username</label>
-      <input type="text" id="s-user"/></div>
     <div class="settings-field"><label>New Password</label>
-      <input type="password" id="s-pass" placeholder="Leave blank to keep current"/></div>
+      <input type="password" id="s-pass" placeholder="Enter new password"/></div>
     <div class="settings-field"><label>Confirm Password</label>
-      <input type="password" id="s-pass2"/></div>
+      <input type="password" id="s-pass2" placeholder="Repeat new password"/></div>
     <div id="s-msg" style="font-size:12px;margin-top:4px;"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Update Password</button>
     </div>
   </div>
 </div>
 
 <script>
+// ════════ SUPABASE ════════
+const SUPA_URL = 'https://mtqhpfcyxhvefglcyirj.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cWhwZmN5eGh2ZWZnbGN5aXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0OTE2MTEsImV4cCI6MjA5NjA2NzYxMX0.YTYUQfvBlEAGTo_x7oQXrLA-jlPALu8DY4Q0hlqLBz8';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
 Chart.defaults.color='#857F78';
 Chart.defaults.borderColor='#2A2520';
 Chart.defaults.font.family="'Space Grotesk',sans-serif";
 Chart.defaults.font.size=11;
 
 // ════════ AUTH ════════
-function creds(){return{user:localStorage.getItem('ug_user')||'admin',pass:localStorage.getItem('ug_pass')||'Unite180!'};}
-function doLogin(){
-  const u=document.getElementById('login-user').value.trim();
-  const p=document.getElementById('login-pass').value;
+async function doLogin(){
+  const email=document.getElementById('login-user').value.trim();
+  const pass=document.getElementById('login-pass').value;
   const err=document.getElementById('login-err');
-  if(u===creds().user&&p===creds().pass){
-    err.style.display='none';localStorage.setItem('ug_session','1');
-    showApp();
-  }else{err.style.display='block';document.getElementById('login-pass').value='';}
+  const btn=document.getElementById('login-btn');
+  btn.textContent='Signing in…';btn.disabled=true;
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  btn.textContent='Sign in →';btn.disabled=false;
+  if(error){err.style.display='block';document.getElementById('login-pass').value='';}
+  else{err.style.display='none';showApp(data.user);}
 }
-function doLogout(){
+async function doLogout(){
   if(!confirm('Sign out?'))return;
-  localStorage.removeItem('ug_session');
+  await sb.auth.signOut();
   document.getElementById('app').classList.remove('active');
   document.getElementById('login-screen').classList.add('active');
   document.getElementById('login-pass').value='';
 }
-function showApp(){
+function showApp(user){
   document.getElementById('login-screen').classList.remove('active');
   document.getElementById('app').classList.add('active');
-  const u=creds().user;
-  document.getElementById('user-display').textContent=u;
-  document.getElementById('user-avatar').textContent=u[0].toUpperCase();
-  loadFromStorage();refreshSidebar();populateFilters();updateTopbar();renderAll();
+  const display=(user?.email||'user').split('@')[0];
+  document.getElementById('user-display').textContent=display;
+  document.getElementById('user-avatar').textContent=display[0].toUpperCase();
+  loadData();
 }
 function openSettings(){
-  document.getElementById('s-user').value=creds().user;
   document.getElementById('s-pass').value='';document.getElementById('s-pass2').value='';
   document.getElementById('s-msg').textContent='';
   document.getElementById('settings-modal').classList.add('open');
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
-function saveSettings(){
-  const u=document.getElementById('s-user').value.trim();
+async function saveSettings(){
   const p=document.getElementById('s-pass').value;
   const p2=document.getElementById('s-pass2').value;
   const msg=document.getElementById('s-msg');
-  if(!u){msg.style.color='var(--red)';msg.textContent='Username required.';return;}
-  if(p&&p!==p2){msg.style.color='var(--red)';msg.textContent='Passwords do not match.';return;}
-  localStorage.setItem('ug_user',u);if(p)localStorage.setItem('ug_pass',p);
-  document.getElementById('user-display').textContent=u;
-  document.getElementById('user-avatar').textContent=u[0].toUpperCase();
-  msg.style.color='var(--green)';msg.textContent='✓ Saved!';setTimeout(closeSettings,1000);
+  if(!p){msg.style.color='var(--red)';msg.textContent='Enter a new password.';return;}
+  if(p!==p2){msg.style.color='var(--red)';msg.textContent='Passwords do not match.';return;}
+  const {error}=await sb.auth.updateUser({password:p});
+  if(error){msg.style.color='var(--red)';msg.textContent=error.message;}
+  else{msg.style.color='var(--green)';msg.textContent='✓ Password updated!';setTimeout(closeSettings,1200);}
 }
 
-// ════════ STATE ════════
+// STATE
 let allMembers=[],allAttendance=[],pendingFiles=[],charts={};
 
-function saveToStorage(){
-  try{localStorage.setItem('ug_members',JSON.stringify(allMembers));
-    localStorage.setItem('ug_att',JSON.stringify(allAttendance));}catch(e){}
+// DB field mapping
+function mToDb(m){return{
+  ugroup_name:m.ugroup,leader:m.leader||'',name:m.name,role:m.role||'',gender:m.gender||'',
+  dob:m.dob||null,age:m.age||null,age_category:m.agecat||'',baptised:m.baptised||'',
+  hr1:m.hr1||'No',hr2:m.hr2||'No',hr3:m.hr3||'No',hr4:m.hr4||'No',
+  usm_status:m.usm||'None',join_date:m.joinDate||null,member_status:m.memberStatus||'',notes:m.notes||'',
+};}
+function dbToM(r){return{
+  id:r.id,ugroup:r.ugroup_name,leader:r.leader,name:r.name,role:r.role,gender:r.gender,
+  dob:r.dob||'',age:r.age,agecat:r.age_category,baptised:r.baptised,
+  hr1:r.hr1,hr2:r.hr2,hr3:r.hr3,hr4:r.hr4,
+  usm:r.usm_status,joinDate:r.join_date||'',memberStatus:r.member_status,notes:r.notes,
+};}
+function aToDb(a){return{
+  att_date:a.date,ugroup_name:a.ugroup,leader:a.leader||'',
+  member_name:a.name,role:a.role||'',present:a.present||'No',
+};}
+function dbToA(r){return{
+  id:r.id,date:r.att_date,ugroup:r.ugroup_name,leader:r.leader,
+  name:r.member_name,role:r.role,present:r.present,
+};}
+
+async function loadData(){
+  document.getElementById('topbar-sub').textContent='Loading…';
+  const [mr,ar]=await Promise.all([
+    sb.from('members').select('*').order('ugroup_name').order('name'),
+    sb.from('attendance').select('*').order('att_date',{ascending:false}),
+  ]);
+  if(mr.error)console.error('Members:',mr.error);
+  if(ar.error)console.error('Attendance:',ar.error);
+  allMembers=(mr.data||[]).map(dbToM);
+  allAttendance=(ar.data||[]).map(dbToA);
+  refreshSidebar();populateFilters();updateTopbar();renderAll();
 }
-function loadFromStorage(){
-  try{const m=localStorage.getItem('ug_members'),a=localStorage.getItem('ug_att');
-    if(m)allMembers=JSON.parse(m);if(a)allAttendance=JSON.parse(a);}catch(e){}
-}
+
 function exportData(){
   if(!allMembers.length&&!allAttendance.length){alert('No data to export.');return;}
   const b=new Blob([JSON.stringify({members:allMembers,attendance:allAttendance,exported:new Date().toISOString()},null,2)],{type:'application/json'});
@@ -783,25 +812,31 @@ function exportData(){
   a.download=`uGroup_Backup_${new Date().toLocaleDateString('en-ZA').replace(/\//g,'-')}.json`;
   a.click();URL.revokeObjectURL(a.href);
 }
-function importData(ev){
+async function importData(ev){
   const file=ev.target.files[0];if(!file)return;
   const r=new FileReader();
-  r.onload=e=>{
-    try{const d=JSON.parse(e.target.result);
+  r.onload=async e=>{
+    try{
+      const d=JSON.parse(e.target.result);
       if(!d.members&&!d.attendance){alert('Invalid backup file.');return;}
       if(!confirm(`Merge ${(d.members||[]).length} members and ${(d.attendance||[]).length} attendance records?`))return;
-      (d.members||[]).forEach(m=>{const i=allMembers.findIndex(x=>x.name===m.name&&x.ugroup===m.ugroup);
-        if(i>=0)allMembers[i]={...allMembers[i],...m};else allMembers.push(m);});
-      (d.attendance||[]).forEach(a=>{if(!allAttendance.find(x=>x.name===a.name&&x.date===a.date&&x.ugroup===a.ugroup))allAttendance.push(a);});
-      saveToStorage();refreshSidebar();populateFilters();updateTopbar();renderAll();
-      alert('✓ Restored!');
+      if(d.members?.length){
+        await sb.from('members').upsert(d.members.map(mToDb),{onConflict:'ugroup_name,name',ignoreDuplicates:false});
+      }
+      if(d.attendance?.length){
+        await sb.from('attendance').upsert(d.attendance.map(aToDb),{onConflict:'att_date,ugroup_name,member_name',ignoreDuplicates:true});
+      }
+      await loadData();alert('✓ Restored!');
     }catch(err){alert('Could not read backup file.');}
   };r.readAsText(file);ev.target.value='';
 }
-function clearAllData(){
-  if(!confirm('Delete ALL data permanently?'))return;
+async function clearAllData(){
+  if(!confirm('Delete ALL data from the cloud permanently? This cannot be undone.'))return;
+  await Promise.all([
+    sb.from('members').delete().neq('id','00000000-0000-0000-0000-000000000000'),
+    sb.from('attendance').delete().neq('id','00000000-0000-0000-0000-000000000000'),
+  ]);
   allMembers=[];allAttendance=[];
-  localStorage.removeItem('ug_members');localStorage.removeItem('ug_att');
   refreshSidebar();populateFilters();updateTopbar();renderAll();
 }
 
@@ -822,26 +857,37 @@ function refreshChips(){
 }
 function rmChip(i){pendingFiles.splice(i,1);refreshChips();}
 async function importFiles(){
-  if(!pendingFiles.length)return;let added=0;
-  for(const f of pendingFiles){added+=await parseFile(f);}
-  pendingFiles=[];refreshChips();saveToStorage();refreshSidebar();populateFilters();updateTopbar();renderAll();
-  alert(`✓ Import complete — ${added} new records added.`);
+  if(!pendingFiles.length)return;
+  let newMembers=[],newAtt=[];
+  for(const f of pendingFiles){
+    const r=await parseFileToArrays(f);
+    newMembers.push(...r.members);newAtt.push(...r.att);
+  }
+  pendingFiles=[];refreshChips();
+  if(newMembers.length){
+    const {error}=await sb.from('members').upsert(newMembers.map(mToDb),{onConflict:'ugroup_name,name',ignoreDuplicates:false});
+    if(error)console.error('Member upsert error:',error);
+  }
+  if(newAtt.length){
+    const {error}=await sb.from('attendance').upsert(newAtt.map(aToDb),{onConflict:'att_date,ugroup_name,member_name',ignoreDuplicates:true});
+    if(error)console.error('Attendance upsert error:',error);
+  }
+  await loadData();
+  alert(`✓ Import complete — ${newMembers.length} member rows, ${newAtt.length} attendance rows processed.`);
 }
-function parseFile(file){
+function parseFileToArrays(file){
   return new Promise(resolve=>{
     const r=new FileReader();
-    r.onload=e=>{let added=0;
+    r.onload=e=>{
+      const members=[],att=[];
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       const ms=wb.Sheets['Members'];
       if(ms){XLSX.utils.sheet_to_json(ms,{defval:'',range:1}).forEach(row=>{
-        const n=normM(row);if(n.name){
-          const i=allMembers.findIndex(m=>m.name===n.name&&m.ugroup===n.ugroup);
-          if(i>=0)allMembers[i]={...allMembers[i],...n};else{allMembers.push(n);added++;}}});}
+        const n=normM(row);if(n.name)members.push(n);});}
       const as=wb.Sheets['Attendance'];
       if(as){XLSX.utils.sheet_to_json(as,{defval:'',range:1}).forEach(row=>{
-        const n=normA(row);if(n.name&&n.date&&!allAttendance.find(a=>a.name===n.name&&a.date===n.date&&a.ugroup===n.ugroup)){
-          allAttendance.push(n);added++;}});}
-      resolve(added);};r.readAsArrayBuffer(file);});
+        const n=normA(row);if(n.name&&n.date)att.push(n);});}
+      resolve({members,att});};r.readAsArrayBuffer(file);});
 }
 function str(v){return String(v||'').trim();}
 function normM(r){
@@ -893,7 +939,7 @@ function statusBadge(s){
 }
 
 // ════════ SAMPLE DATA ════════
-function loadSampleData(){
+async function loadSampleData(){
   const groups=['Grace Cell','Hope Cell','Faith Cell','Joy Cell','Peace Cell','Love Cell','Light Cell'];
   const leaders=['Cornu du Toit','Jaden Viljoen','Johandre Combrinck','Karabo Moloto','Ntando Ngobe','Shaldon Cloete','Siyabonga Nhlonipho'];
   const names=['James','Sarah','David','Emma','Luke','Zoe','Noah','Ava','Liam','Mia','Ethan','Lily','Oliver','Chloe','Jacob','Sofia','Mason','Ella','William','Amelia','Sipho','Lerato','Thandi','Bongani','Nomsa','Pieter','Anna'];
@@ -924,7 +970,12 @@ function loadSampleData(){
     const ds=wed.toLocaleDateString('en-ZA');
     allMembers.forEach(m=>{if(Math.random()>.1)allAttendance.push({date:ds,ugroup:m.ugroup,leader:m.leader,name:m.name,role:m.role,present:Math.random()>.25?'Yes':'No'});});
   });
-  saveToStorage();refreshSidebar();populateFilters();updateTopbar();renderAll();
+  // Upload sample data to Supabase
+  await sb.from('members').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('attendance').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('members').insert(allMembers.map(mToDb));
+  await sb.from('attendance').insert(allAttendance.map(aToDb));
+  await loadData();
 }
 
 // ════════ NAVIGATION ════════
@@ -1190,7 +1241,7 @@ function openUGroupModal(){
 }
 function closeUGroupModal(){document.getElementById('ugroup-modal').classList.remove('open');}
 document.getElementById('ugroup-modal').addEventListener('click',function(e){if(e.target===this)closeUGroupModal();});
-function saveUGroup(){
+async function saveUGroup(){
   const name=document.getElementById('ug-name').value.trim();
   const leader=document.getElementById('ug-leader').value;
   const asst=document.getElementById('ug-asst').value.trim();
@@ -1198,9 +1249,10 @@ function saveUGroup(){
   if(!name){err.textContent='uGroup name is required.';return;}
   if(!leader){err.textContent='Please select a leader.';return;}
   if(allMembers.find(m=>m.ugroup===name)){err.textContent='A uGroup with this name already exists.';return;}
-  allMembers.push({ugroup:name,leader,name:leader,role:'Leader',gender:'',age:null,agecat:'',baptised:'',hr1:'No',hr2:'No',hr3:'No',hr4:'No',usm:'None',notes:''});
-  if(asst)allMembers.push({ugroup:name,leader,name:asst,role:'Assistant Leader',gender:'',age:null,agecat:'',baptised:'',hr1:'No',hr2:'No',hr3:'No',hr4:'No',usm:'None',notes:''});
-  saveToStorage();closeUGroupModal();refreshSidebar();populateFilters();updateTopbar();renderAll();
+  const rows=[{ugroup:name,leader,name:leader,role:'Leader',gender:'',age:null,agecat:'',baptised:'',hr1:'No',hr2:'No',hr3:'No',hr4:'No',usm:'None',notes:'',joinDate:'',memberStatus:''}];
+  if(asst)rows.push({ugroup:name,leader,name:asst,role:'Assistant Leader',gender:'',age:null,agecat:'',baptised:'',hr1:'No',hr2:'No',hr3:'No',hr4:'No',usm:'None',notes:'',joinDate:'',memberStatus:''});
+  await sb.from('members').insert(rows.map(mToDb));
+  closeUGroupModal();await loadData();
   document.getElementById('filter-group').value=name;renderAll();
 }
 
@@ -1235,33 +1287,46 @@ function openMemberModal(idx=-1){
 function closeMemberModal(){document.getElementById('member-modal').classList.remove('open');}
 document.getElementById('member-modal').addEventListener('click',function(e){if(e.target===this)closeMemberModal();});
 document.getElementById('settings-modal').addEventListener('click',function(e){if(e.target===this)closeSettings();});
-function saveMember(){
+async function saveMember(){
   const name=document.getElementById('f-name').value.trim();
   if(!name){alert('Member name is required.');return;}
   const dob=document.getElementById('f-dob').value;
   const age=dob?calcAge(new Date(dob)):null;
   const m={ugroup:document.getElementById('f-ugroup').value.trim(),leader:document.getElementById('f-leader').value,name,role:document.getElementById('f-role').value,gender:document.getElementById('f-gender').value,dob,age,agecat:document.getElementById('f-agecat').value||ageCat(age),baptised:document.getElementById('f-baptised').value,hr1:document.getElementById('f-hr1').checked?'Yes':'No',hr2:document.getElementById('f-hr2').checked?'Yes':'No',hr3:document.getElementById('f-hr3').checked?'Yes':'No',hr4:document.getElementById('f-hr4').checked?'Yes':'No',usm:document.getElementById('f-usm').value,notes:document.getElementById('f-notes').value.trim(),joinDate:document.getElementById('f-joindate').value,memberStatus:document.getElementById('f-status').value};
   const idx=parseInt(document.getElementById('edit-idx').value);
-  if(idx>=0)allMembers[idx]=m;else allMembers.push(m);
-  saveToStorage();closeMemberModal();refreshSidebar();populateFilters();updateTopbar();renderAll();
+  const dbRow=mToDb(m);
+  if(idx>=0&&allMembers[idx].id){
+    // Update existing
+    await sb.from('members').update(dbRow).eq('id',allMembers[idx].id);
+  }else{
+    // Insert new
+    await sb.from('members').insert([dbRow]);
+  }
+  closeMemberModal();await loadData();
   if(currentView==='members')renderMembersView();
 }
 function editMember(idx){openMemberModal(idx);}
-function delMember(idx){
+async function delMember(idx){
   if(!confirm(`Remove "${allMembers[idx].name}"?`))return;
-  allMembers.splice(idx,1);saveToStorage();refreshSidebar();updateTopbar();populateFilters();renderAll();
+  const id=allMembers[idx].id;
+  if(id){await sb.from('members').delete().eq('id',id);}
+  await loadData();
   if(currentView==='members')renderMembersView();
 }
 
 // ════════ BOOT ════════
-(function(){
-  const saved=localStorage.getItem('ug_theme');
-  const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.setAttribute('data-theme',saved||(prefersDark?'dark':'dark'));
-})();
-
-if(localStorage.getItem('ug_session')==='1'){showApp();}
-else{document.getElementById('login-screen').classList.add('active');}
+// Check existing Supabase session on load
+sb.auth.getSession().then(({data:{session}})=>{
+  if(session){showApp(session.user);}
+  else{document.getElementById('login-screen').classList.add('active');}
+});
+// Keep session alive on tab focus
+sb.auth.onAuthStateChange((event,session)=>{
+  if(event==='SIGNED_OUT'){
+    document.getElementById('app').classList.remove('active');
+    document.getElementById('login-screen').classList.add('active');
+  }
+});
 </script>
 </body>
 </html>
