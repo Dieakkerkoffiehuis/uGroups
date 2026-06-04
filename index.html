@@ -448,6 +448,9 @@ tbody tr:hover td{background:var(--surface-hover);}
       <div class="nav-item" onclick="showView('attendance')">
         <span class="nav-icon">📅</span> Attendance
       </div>
+      <div class="nav-item" onclick="showView('pipeline')">
+        <span class="nav-icon">🌱</span> Leadership Pipeline
+      </div>
     </div>
 
     <div class="sidebar-section">
@@ -591,6 +594,15 @@ tbody tr:hover td{background:var(--surface-hover);}
         </div>
       </div>
 
+
+      <!-- VIEW: LEADERSHIP PIPELINE -->
+      <div id="view-pipeline" style="display:none;">
+        <div style="margin-bottom:20px;">
+          <p style="color:var(--text-secondary);font-size:13px;">Members are scored against your leadership criteria. Top candidates are highlighted for each uGroup.</p>
+        </div>
+        <div id="pipeline-content"></div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -668,6 +680,18 @@ tbody tr:hover td{background:var(--surface-hover);}
           <option value="None">None</option><option value="Year 1">Year 1</option>
           <option value="Year 2">Year 2</option><option value="Completed">Completed</option>
         </select></div>
+      <div class="field"><label>Attends Church (Sunday)</label>
+        <select id="f-church">
+          <option value="">Select…</option><option>Yes</option><option>No</option>
+        </select></div>
+      <div class="field"><label>Attends Prayer Night (Sat)</label>
+        <select id="f-prayer">
+          <option value="">Select…</option><option>Yes</option><option>No</option>
+        </select></div>
+      <div class="field"><label>Holy Spirit Gifts</label>
+        <select id="f-hsgifts">
+          <option value="">Select…</option><option>Yes</option><option>No</option>
+        </select></div>
       <div class="field"><label>Date Joined Church</label>
         <input id="f-joindate" type="date"/></div>
       <div class="field"><label>Member Status</label>
@@ -691,6 +715,49 @@ tbody tr:hover td{background:var(--surface-hover);}
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeMemberModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveMember()">Save Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Split uGroup Modal ══ -->
+<div class="modal-overlay" id="split-modal">
+  <div class="modal" style="max-width:700px;">
+    <button class="close-btn" onclick="closeSplitModal()">✕</button>
+    <h2 id="split-modal-title">Split uGroup</h2>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:18px;">
+      Assign each member to either the existing group or the new group. The assistant leader will become the new group's leader.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+      <div class="field"><label>Existing Group Name</label>
+        <input id="split-name-a" placeholder="Keep current name"/></div>
+      <div class="field"><label>New Group Name</label>
+        <input id="split-name-b" placeholder="e.g. Grace Cell B"/></div>
+      <div class="field"><label>Existing Group Leader</label>
+        <input id="split-leader-a" readonly style="opacity:.6;"/></div>
+      <div class="field"><label>New Group Leader (auto: assistant leader)</label>
+        <select id="split-leader-b">
+          <option value="">Select leader…</option>
+          <option>Cornu du Toit</option><option>Jaden Viljoen</option>
+          <option>Johandre Combrinck</option><option>Karabo Moloto</option>
+          <option>Ntando Ngobe</option><option>Shaldon Cloete</option>
+          <option>Siyabonga Nhlonipho</option>
+        </select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;" id="split-col-a-label">Group A</div>
+        <div id="split-col-a" style="min-height:120px;background:var(--surface-subtle);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;" id="split-col-b-label">New Group</div>
+        <div id="split-col-b" style="min-height:120px;background:var(--accent-muted);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Click a member to move them between groups.</p>
+    <div id="split-err" class="msg-error"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeSplitModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmSplit()">Confirm Split</button>
     </div>
   </div>
 </div>
@@ -776,12 +843,14 @@ function mToDb(m){return{
   dob:m.dob||null,age:m.age||null,age_category:m.agecat||'',baptised:m.baptised||'',
   hr1:m.hr1||'No',hr2:m.hr2||'No',hr3:m.hr3||'No',hr4:m.hr4||'No',
   usm_status:m.usm||'None',join_date:m.joinDate||null,member_status:m.memberStatus||'',notes:m.notes||'',
+  attends_church:m.attendsChurch||'No',attends_prayer:m.attendsPrayer||'No',holy_spirit:m.holySpirit||'No',
 };}
 function dbToM(r){return{
   id:r.id,ugroup:r.ugroup_name,leader:r.leader,name:r.name,role:r.role,gender:r.gender,
   dob:r.dob||'',age:r.age,agecat:r.age_category,baptised:r.baptised,
   hr1:r.hr1,hr2:r.hr2,hr3:r.hr3,hr4:r.hr4,
   usm:r.usm_status,joinDate:r.join_date||'',memberStatus:r.member_status,notes:r.notes,
+  attendsChurch:r.attends_church||'No',attendsPrayer:r.attends_prayer||'No',holySpirit:r.holy_spirit||'No',
 };}
 function aToDb(a){return{
   att_date:a.date,ugroup_name:a.ugroup,leader:a.leader||'',
@@ -864,16 +933,28 @@ async function importFiles(){
     newMembers.push(...r.members);newAtt.push(...r.att);
   }
   pendingFiles=[];refreshChips();
+  let memberErrors=[], attErrors=[];
   if(newMembers.length){
-    const {error}=await sb.from('members').upsert(newMembers.map(mToDb),{onConflict:'ugroup_name,name',ignoreDuplicates:false});
-    if(error)console.error('Member upsert error:',error);
+    // Insert in batches of 50
+    for(let i=0;i<newMembers.length;i+=50){
+      const batch=newMembers.slice(i,i+50).map(mToDb);
+      const {error}=await sb.from('members').upsert(batch,{onConflict:'ugroup_name,name'});
+      if(error)memberErrors.push(error.message);
+    }
   }
   if(newAtt.length){
-    const {error}=await sb.from('attendance').upsert(newAtt.map(aToDb),{onConflict:'att_date,ugroup_name,member_name',ignoreDuplicates:true});
-    if(error)console.error('Attendance upsert error:',error);
+    for(let i=0;i<newAtt.length;i+=50){
+      const batch=newAtt.slice(i,i+50).map(aToDb);
+      const {error}=await sb.from('attendance').upsert(batch,{onConflict:'att_date,ugroup_name,member_name'});
+      if(error)attErrors.push(error.message);
+    }
+  }
+  if(memberErrors.length||attErrors.length){
+    alert('Import errors:\n'+[...memberErrors,...attErrors].join('\n'));
+    return;
   }
   await loadData();
-  alert(`✓ Import complete — ${newMembers.length} member rows, ${newAtt.length} attendance rows processed.`);
+  alert(`✓ Import complete — ${newMembers.length} member rows, ${newAtt.length} attendance rows saved.`);
 }
 function parseFileToArrays(file){
   return new Promise(resolve=>{
@@ -987,10 +1068,11 @@ function showView(v){
   });
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.querySelector(`.nav-item[onclick*="${v}"]`)?.classList.add('active');
-  const titles={overview:'Overview',members:'Members',attendance:'Attendance'};
+  const titles={overview:'Overview',members:'Members',attendance:'Attendance',pipeline:'Leadership Pipeline'};
   document.getElementById('topbar-title').textContent=titles[v]||v;
   if(v==='members'){populateMemberFilters();renderMembersView();}
   if(v==='attendance'){populateAttFilters();renderAttView();}
+  if(v==='pipeline'){renderPipeline();}
 }
 
 function refreshSidebar(){
@@ -998,10 +1080,16 @@ function refreshSidebar(){
   document.getElementById('nav-member-count').textContent=allMembers.length;
   const el=document.getElementById('sidebar-ugroups');
   if(!groups.length){el.innerHTML='<div style="font-size:11px;color:var(--text-muted);padding:4px 10px;">No uGroups yet</div>';return;}
-  el.innerHTML=groups.map(g=>`
-    <div class="ug-item" onclick="filterToGroup('${g}')">
-      <div class="ug-dot"></div>${g}
-    </div>`).join('');
+  el.innerHTML=groups.map(g=>{
+    const count=allMembers.filter(m=>m.ugroup===g&&m.name).length;
+    const readyToSplit=count>=14;
+    return `<div class="ug-item" onclick="filterToGroup('${g}')">
+      <div class="ug-dot" style="${readyToSplit?'background:var(--gold)':''}"></div>
+      <span style="flex:1">${g}</span>
+      <span style="font-size:10px;color:${readyToSplit?'var(--gold)':'var(--text-muted)'};">${count}</span>
+      ${readyToSplit?`<span onclick="event.stopPropagation();openSplitModal('${g}')" style="font-size:10px;color:var(--gold);margin-left:2px;cursor:pointer;" title="Ready to split!">✂</span>`:''}
+    </div>`;
+  }).join('');
 }
 function filterToGroup(g){
   showView('overview');
@@ -1274,11 +1362,14 @@ function openMemberModal(idx=-1){
     document.getElementById('f-usm').value=m.usm||'None';
     document.getElementById('f-joindate').value=m.joinDate||'';
     document.getElementById('f-status').value=m.memberStatus||'';
+    document.getElementById('f-church').value=m.attendsChurch||'';
+    document.getElementById('f-prayer').value=m.attendsPrayer||'';
+    document.getElementById('f-hsgifts').value=m.holySpirit||'';
     ['hr1','hr2','hr3','hr4'].forEach(k=>document.getElementById('f-'+k).checked=m[k].toLowerCase()==='yes');
     document.getElementById('f-notes').value=m.notes;
   }else{
     ['f-ugroup','f-name','f-dob','f-notes','f-joindate'].forEach(id=>document.getElementById(id).value='');
-    ['f-role','f-gender','f-agecat','f-baptised','f-leader','f-status'].forEach(id=>document.getElementById(id).value='');
+    ['f-role','f-gender','f-agecat','f-baptised','f-leader','f-status','f-church','f-prayer','f-hsgifts'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-usm').value='None';
     ['f-hr1','f-hr2','f-hr3','f-hr4'].forEach(id=>document.getElementById(id).checked=false);
   }
@@ -1315,6 +1406,173 @@ async function delMember(idx){
 }
 
 // ════════ BOOT ════════
+// ════════ LEADERSHIP PIPELINE ════════
+function leaderScore(m){
+  let score=0,criteria=[];
+  const check=(val,pts,label)=>{const ok=(val||'').toLowerCase()==='yes';if(ok)score+=pts;criteria.push({label,ok,pts});};
+  check(m.hr1,10,'Homerun 1');
+  check(m.hr2,10,'Homerun 2');
+  check(m.hr3,10,'Homerun 3');
+  check(m.hr4,20,'Homerun 4');
+  check(m.baptised,15,'Baptised');
+  check(m.attendsChurch,15,'Church (Sunday)');
+  check(m.attendsPrayer,10,'Prayer Night (Sat)');
+  check(m.holySpirit,10,'Holy Spirit Gifts');
+  return{score,criteria};
+}
+
+function renderPipeline(){
+  const div=document.getElementById('pipeline-content');
+  const groups=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort();
+  if(!groups.length){div.innerHTML='<p class="empty">No members yet.</p>';return;}
+
+  div.innerHTML=groups.map(g=>{
+    const members=allMembers.filter(m=>m.ugroup===g&&m.name&&m.role!=='Leader');
+    const scored=members.map(m=>({...m,...leaderScore(m)})).sort((a,b)=>b.score-a.score);
+    const top=scored.filter(m=>m.score>=60);
+    const groupSize=allMembers.filter(m=>m.ugroup===g&&m.name).length;
+    const splitReady=groupSize>=14;
+
+    return `<div class="chart-card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:15px;font-weight:700;">${g}</h3>
+          <p style="font-size:11px;color:var(--text-secondary);">${groupSize} members
+            ${splitReady?`<span style="background:var(--gold-muted);color:var(--gold);padding:1px 7px;border-radius:8px;margin-left:6px;font-weight:600;">⚡ Ready to split</span>`:''}
+          </p>
+        </div>
+        ${splitReady?`<button class="btn btn-ghost btn-sm" onclick="openSplitModal('${g}')">✂ Split uGroup</button>`:''}
+      </div>
+      ${top.length===0?`<p style="font-size:12px;color:var(--text-muted);padding:8px 0;">No members currently meet the 60%+ threshold. Keep investing!</p>`:''}
+      ${scored.slice(0,6).map(m=>{
+        const pct=m.score;
+        const color=pct>=80?'var(--green)':pct>=60?'var(--gold)':'var(--text-muted)';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+          <div style="width:32px;height:32px;border-radius:50%;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${pct}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;">${m.name} <span style="font-size:10px;color:var(--text-muted);font-weight:400;">${m.role||''}</span></div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">
+              ${m.criteria.map(c=>`<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:${c.ok?'var(--green-muted)':'var(--surface-subtle)'};color:${c.ok?'var(--green)':'var(--text-muted)'};">${c.label}</span>`).join('')}
+            </div>
+          </div>
+          <div style="font-size:11px;color:${color};font-weight:700;white-space:nowrap;">${pct>=80?'🌟 Ready':'${pct>=60?'🟡 Growing':''}'}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ════════ SPLIT uGROUP ════════
+let splitGroupName='';
+let splitAssignments={};// name -> 'A' or 'B'
+
+function openSplitModal(groupName){
+  splitGroupName=groupName;
+  const members=allMembers.filter(m=>m.ugroup===groupName&&m.name);
+  const leader=members.find(m=>m.role==='Leader');
+  const asst=members.find(m=>m.role==='Assistant Leader');
+
+  document.getElementById('split-modal-title').textContent=`Split: ${groupName}`;
+  document.getElementById('split-name-a').value=groupName;
+  document.getElementById('split-name-b').value='';
+  document.getElementById('split-leader-a').value=leader?.name||'';
+  document.getElementById('split-leader-b').value=asst?.name||'';
+  document.getElementById('split-err').textContent='';
+
+  // Default: leader + half stay in A, assistant + other half go to B
+  splitAssignments={};
+  const nonLeaders=members.filter(m=>m.role!=='Leader'&&m.role!=='Assistant Leader');
+  members.forEach(m=>{
+    if(m.role==='Leader') splitAssignments[m.name]='A';
+    else if(m.role==='Assistant Leader') splitAssignments[m.name]='B';
+  });
+  // Split non-leaders roughly in half
+  nonLeaders.forEach((m,i)=>{splitAssignments[m.name]=i<Math.ceil(nonLeaders.length/2)?'A':'B';});
+
+  renderSplitCols(members);
+  document.getElementById('split-modal').classList.add('open');
+}
+
+function renderSplitCols(members){
+  const nameA=document.getElementById('split-name-a').value||'Group A';
+  const nameB=document.getElementById('split-name-b').value||'New Group';
+  document.getElementById('split-col-a-label').textContent=nameA;
+  document.getElementById('split-col-b-label').textContent=nameB;
+
+  const colA=document.getElementById('split-col-a');
+  const colB=document.getElementById('split-col-b');
+
+  const makeItem=(m,side)=>{
+    const other=side==='A'?'B':'A';
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface-raised);border-radius:6px;cursor:pointer;font-size:12px;';
+    div.innerHTML=`<span style="flex:1;">${m.name}</span><span style="font-size:10px;color:var(--text-muted);">${m.role||'Member'}</span><span style="font-size:10px;color:var(--accent);">→</span>`;
+    div.title='Click to move to other group';
+    div.onclick=()=>{splitAssignments[m.name]=other;renderSplitCols(allMembers.filter(x=>x.ugroup===splitGroupName&&x.name));};
+    return div;
+  };
+
+  colA.innerHTML='';colB.innerHTML='';
+  members.forEach(m=>{
+    if(splitAssignments[m.name]==='A') colA.appendChild(makeItem(m,'A'));
+    else colB.appendChild(makeItem(m,'B'));
+  });
+
+  // Update counts
+  const countA=Object.values(splitAssignments).filter(v=>v==='A').length;
+  const countB=Object.values(splitAssignments).filter(v=>v==='B').length;
+  document.getElementById('split-col-a-label').textContent=`${nameA} (${countA})`;
+  document.getElementById('split-col-b-label').textContent=`${nameB} (${countB})`;
+}
+
+// Listen for name changes to update col headers
+['split-name-a','split-name-b'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',()=>{
+    const members=allMembers.filter(m=>m.ugroup===splitGroupName&&m.name);
+    renderSplitCols(members);
+  });
+});
+
+function closeSplitModal(){document.getElementById('split-modal').classList.remove('open');}
+document.getElementById('split-modal')?.addEventListener('click',function(e){if(e.target===this)closeSplitModal();});
+
+async function confirmSplit(){
+  const nameA=document.getElementById('split-name-a').value.trim();
+  const nameB=document.getElementById('split-name-b').value.trim();
+  const leaderB=document.getElementById('split-leader-b').value;
+  const err=document.getElementById('split-err');
+
+  if(!nameB){err.textContent='Enter a name for the new group.';return;}
+  if(!leaderB){err.textContent='Select a leader for the new group.';return;}
+  if(nameA===nameB){err.textContent='Groups must have different names.';return;}
+
+  const members=allMembers.filter(m=>m.ugroup===splitGroupName&&m.name);
+
+  // Update group A members (rename if changed)
+  const groupAMembers=members.filter(m=>splitAssignments[m.name]==='A');
+  const groupBMembers=members.filter(m=>splitAssignments[m.name]==='B');
+
+  err.textContent='Saving…';
+
+  // Rename group A if name changed
+  if(nameA!==splitGroupName){
+    for(const m of groupAMembers){
+      if(m.id) await sb.from('members').update({ugroup_name:nameA}).eq('id',m.id);
+    }
+  }
+
+  // Update group B members: new ugroup name, promote assistant to leader
+  for(const m of groupBMembers){
+    const newRole=m.role==='Assistant Leader'?'Leader':m.role;
+    const newLeader=m.role==='Assistant Leader'?m.name:leaderB;
+    if(m.id) await sb.from('members').update({ugroup_name:nameB,role:newRole,leader:newLeader}).eq('id',m.id);
+  }
+
+  closeSplitModal();
+  await loadData();
+  alert(`✓ Split complete!\n${nameA}: ${groupAMembers.length} members\n${nameB}: ${groupBMembers.length} members`);
+}
+
 // Check existing Supabase session on load
 sb.auth.getSession().then(({data:{session}})=>{
   if(session){showApp(session.user);}
