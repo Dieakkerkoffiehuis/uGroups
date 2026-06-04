@@ -838,11 +838,21 @@ async function saveSettings(){
 let allMembers=[],allAttendance=[],pendingFiles=[],charts={};
 
 // DB field mapping
+function safeDate(v){
+  if(!v) return null;
+  if(v instanceof Date) return v.toISOString().split('T')[0];
+  const s=String(v).trim();
+  if(!s) return null;
+  // Try parse and return YYYY-MM-DD only
+  const d=new Date(s);
+  if(isNaN(d.getTime())) return null;
+  return d.toISOString().split('T')[0];
+}
 function mToDb(m){return{
   ugroup_name:m.ugroup,leader:m.leader||'',name:m.name,role:m.role||'',gender:m.gender||'',
-  dob:m.dob||null,age:m.age||null,age_category:m.agecat||'',baptised:m.baptised||'',
+  dob:safeDate(m.dob),age:m.age||null,age_category:m.agecat||'',baptised:m.baptised||'',
   hr1:m.hr1||'No',hr2:m.hr2||'No',hr3:m.hr3||'No',hr4:m.hr4||'No',
-  usm_status:m.usm||'None',join_date:m.joinDate||null,member_status:m.memberStatus||'',notes:m.notes||'',
+  usm_status:m.usm||'None',join_date:safeDate(m.joinDate),member_status:m.memberStatus||'',notes:m.notes||'',
   attends_church:m.attendsChurch||'No',attends_prayer:m.attendsPrayer||'No',holy_spirit:m.holySpirit||'No',
 };}
 function dbToM(r){return{
@@ -973,8 +983,9 @@ function parseFileToArrays(file){
 function str(v){return String(v||'').trim();}
 function normM(r){
   const age=parseInt(r['Age'])||calcAge(r['Date of Birth']);
+  const rawDob=r['Date of Birth'];const dobStr=rawDob instanceof Date?rawDob.toISOString().split('T')[0]:str(rawDob);
   return{ugroup:str(r['uGroup Name']),leader:str(r['Leader Name']),name:str(r['Member Name']),
-    role:str(r['Role']),gender:str(r['Gender']),dob:str(r['Date of Birth']),age:age||null,
+    role:str(r['Role']),gender:str(r['Gender']),dob:dobStr,age:age||null,
     agecat:str(r['Age Category'])||ageCat(age),baptised:str(r['Baptised']),
     hr1:str(r['Homerun 1']),hr2:str(r['Homerun 2']),hr3:str(r['Homerun 3']),hr4:str(r['Homerun 4']),
     usm:str(r['USM Status']||r['USM']||'None'),notes:str(r['Notes']),
