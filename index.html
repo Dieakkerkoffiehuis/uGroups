@@ -1455,7 +1455,7 @@ function renderPipeline(){
               ${m.criteria.map(c=>`<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:${c.ok?'var(--green-muted)':'var(--surface-subtle)'};color:${c.ok?'var(--green)':'var(--text-muted)'};">${c.label}</span>`).join('')}
             </div>
           </div>
-          <div style="font-size:11px;color:${color};font-weight:700;white-space:nowrap;">${pct>=80?'🌟 Ready':'${pct>=60?'🟡 Growing':''}'}</div>
+          <div style="font-size:11px;color:${color};font-weight:700;white-space:nowrap;">${pct>=80?'🌟 Ready':pct>=60?'🟡 Growing':''}</div>
         </div>`;
       }).join('')}
     </div>`;
