@@ -185,6 +185,8 @@ body{
 .icon-btn:hover{background:var(--surface-hover);color:var(--text-primary);}
 
 /* ── Main content ── */
+.sidebar.sidebar-hidden{transform:translateX(-100%);}
+.sidebar.sidebar-hidden ~ .main,.main.sidebar-hidden{margin-left:0;}
 .main{
   margin-left:var(--sidebar-w);flex:1;
   display:flex;flex-direction:column;
@@ -411,7 +413,7 @@ tbody tr:hover td{background:var(--surface-hover);}
 
 /* Burger button */
 .burger-btn{
-  display:none;
+  display:flex;
   flex-direction:column;justify-content:center;align-items:center;
   gap:5px;width:36px;height:36px;
   background:none;border:none;cursor:pointer;
@@ -435,9 +437,9 @@ tbody tr:hover td{background:var(--surface-hover);}
 /* Mobile */
 @media(max-width:768px){
   .burger-btn{display:flex;}
-  .sidebar{transform:translateX(-100%);transition:transform .25s;}
-  .sidebar.open{transform:translateX(0);}
-  .main{margin-left:0;}
+  .sidebar{transform:translateX(-100%)!important;transition:transform .25s;}
+  .sidebar.open{transform:translateX(0)!important;}
+  .main{margin-left:0!important;}
   .chart-wide{grid-column:span 1;}
   .form-grid{grid-template-columns:1fr;}
   .topbar{padding:14px 16px;gap:4px;}
@@ -1119,8 +1121,8 @@ async function loadSampleData(){
 let currentView='overview';
 function showView(v){
   currentView=v;
-  ['overview','members','attendance'].forEach(id=>{
-    document.getElementById('view-'+id).style.display=id===v?'block':'none';
+  ['overview','members','attendance','pipeline'].forEach(id=>{
+    const el=document.getElementById('view-'+id);if(el)el.style.display=id===v?'block':'none';
   });
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.querySelector(`.nav-item[onclick*="${v}"]`)?.classList.add('active');
@@ -1128,7 +1130,7 @@ function showView(v){
   document.getElementById('topbar-title').textContent=titles[v]||v;
   if(v==='members'){populateMemberFilters();renderMembersView();}
   if(v==='attendance'){populateAttFilters();renderAttView();}
-  if(v==='pipeline'){renderPipeline();}
+  if(v==='pipeline'){try{renderPipeline();}catch(e){console.error('pipeline error',e);}}
 }
 
 function refreshSidebar(){
@@ -1616,7 +1618,7 @@ function renderSplitPool() {
   // Add drag events
   div.querySelectorAll('.split-member-card').forEach(el => {
     el.addEventListener('dragstart', e => {
-      splitState.dragging = splitState.pool.find(m => m.id === el.dataset.id || m.name === el.dataset.name);
+      const eid=el.dataset.id; const ename=el.dataset.name; splitState.dragging = splitState.pool.find(m => (m.id&&m.id===eid) || m.name===ename);
       e.dataTransfer.effectAllowed = 'move';
       el.style.opacity = '0.4';
     });
@@ -1737,7 +1739,7 @@ function laneItemHTML(m, leader, color) {
         <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${baptised?'#4ECBA022':'#2E253388'};color:${baptised?'#4ECBA0':'#7C6E88'};">${baptised?'Bap ✓':'Not bap'}</span>
       </div>
     </div>
-    <button onclick="returnToPool('${m.name}','${leader}')"
+    <button class="return-btn" data-member="${m.name}" data-leader="${leader}"
       style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7C6E88;font-size:14px;padding:2px 4px;border-radius:4px;"
       onmouseover="this.style.color='#E05B5B'" onmouseout="this.style.color='#7C6E88'">×</button>
   </div>`;
@@ -1758,6 +1760,15 @@ function updateSplitCounts() {
   document.getElementById('split-pool-count').textContent = `${splitState.pool.length} in pool`;
   document.getElementById('split-assigned-count').textContent = `${assigned} assigned`;
 }
+
+// Event delegation for return-to-pool buttons
+document.getElementById('split-lanes')?.addEventListener('click', e=>{
+  const btn=e.target.closest('.return-btn');
+  if(!btn)return;
+  const mName=btn.dataset.member;
+  const lName=btn.dataset.leader.trim();
+  returnToPool(mName,lName);
+});
 
 async function confirmSplitOverlay() {
   const lanes = splitState.lanes;
@@ -1787,9 +1798,17 @@ async function confirmSplitOverlay() {
 // ════════ MOBILE SIDEBAR ════════
 function toggleSidebar(){
   const sb=document.querySelector('.sidebar');
+  const main=document.querySelector('.main');
   const ov=document.getElementById('sidebar-overlay');
-  const open=sb.classList.toggle('open');
-  ov.classList.toggle('active',open);
+  if(window.innerWidth<=768){
+    // Mobile: slide in from left
+    const open=sb.classList.toggle('open');
+    ov.classList.toggle('active',open);
+  } else {
+    // Desktop: hide/show sidebar, shift main
+    const hidden=sb.classList.toggle('sidebar-hidden');
+    main.style.marginLeft=hidden?'0':'var(--sidebar-w)';
+  }
 }
 function closeSidebar(){
   document.querySelector('.sidebar').classList.remove('open');
