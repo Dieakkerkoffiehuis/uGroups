@@ -1145,7 +1145,7 @@ function refreshSidebar(){
       <div class="ug-dot" style="${readyToSplit?'background:var(--gold)':''}"></div>
       <span style="flex:1">${g}</span>
       <span style="font-size:10px;color:${readyToSplit?'var(--gold)':'var(--text-muted)'};">${count}</span>
-      ${readyToSplit?`<span onclick="event.stopPropagation();openSplitModal('${g}')" style="font-size:10px;color:var(--gold);margin-left:2px;cursor:pointer;" title="Ready to split!">✂</span>`:''}
+      ${readyToSplit?`<span class="split-trigger" data-group="${g.replace(/"/g,'&quot;')}" onclick="event.stopPropagation()" style="font-size:10px;color:var(--gold);margin-left:2px;cursor:pointer;" title="Ready to split!">✂</span>`:''}
     </div>`;
   }).join('');
 }
@@ -1496,10 +1496,10 @@ function renderPipeline(){
         <div>
           <h3 style="font-size:15px;font-weight:700;">${g}</h3>
           <p style="font-size:11px;color:var(--text-secondary);">${groupSize} members
-            ${splitReady?`<span style="background:var(--gold-muted);color:var(--gold);padding:1px 7px;border-radius:8px;margin-left:6px;font-weight:600;">⚡ Ready to split</span>`:''}
+            ${splitReady?`<span style="background:var(--gold-muted);color:var(--gold);padding:1px 7px;border-radius:8px;margin-left:6px;font-weight:600;cursor:pointer;" class="split-trigger" data-group="${g.replace(/"/g,'&quot;')}">⚡ Ready to split</span>`:''}
           </p>
         </div>
-        ${splitReady?`<button class="btn btn-ghost btn-sm" onclick="openSplitModal('${g}')">✂ Split uGroup</button>`:''}
+        ${splitReady?`<button class="btn btn-ghost btn-sm split-trigger" data-group="${g.replace(/"/g,'&quot;')}">✂ Split uGroup</button>`:''}
       </div>
       ${top.length===0?`<p style="font-size:12px;color:var(--text-muted);padding:8px 0;">No members currently meet the 60%+ threshold. Keep investing!</p>`:''}
       ${scored.slice(0,6).map(m=>{
@@ -1760,6 +1760,15 @@ function updateSplitCounts() {
   document.getElementById('split-pool-count').textContent = `${splitState.pool.length} in pool`;
   document.getElementById('split-assigned-count').textContent = `${assigned} assigned`;
 }
+
+// Event delegation for split trigger buttons (handles apostrophes in group names)
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.split-trigger');
+  if (!btn) return;
+  e.stopPropagation();
+  const groupName = btn.dataset.group;
+  if (groupName) openSplitModal(groupName);
+});
 
 // Event delegation for return-to-pool buttons
 document.getElementById('split-lanes')?.addEventListener('click', e=>{
