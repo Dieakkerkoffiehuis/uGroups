@@ -665,10 +665,6 @@ tbody tr:hover td{background:var(--surface-hover);}
       <div class="field"><label>Leader *</label>
         <select id="ug-leader">
           <option value="">Select leader…</option>
-          <option>Cornu du Toit</option><option>Jaden Viljoen</option>
-          <option>Johandre Combrinck</option><option>Karabo Moloto</option>
-          <option>Ntando Ngobe</option><option>Shaldon Cloete</option>
-          <option>Siyabonga Nhlonipho</option>
         </select></div>
       <div class="field"><label>Assistant Leader</label>
         <input id="ug-asst" placeholder="Full name (optional)"/></div>
@@ -694,10 +690,6 @@ tbody tr:hover td{background:var(--surface-hover);}
       <div class="field"><label>Leader</label>
         <select id="f-leader">
           <option value="">Select…</option>
-          <option>Cornu du Toit</option><option>Jaden Viljoen</option>
-          <option>Johandre Combrinck</option><option>Karabo Moloto</option>
-          <option>Ntando Ngobe</option><option>Shaldon Cloete</option>
-          <option>Siyabonga Nhlonipho</option>
         </select></div>
       <div class="field"><label>Member Name *</label>
         <input id="f-name" placeholder="Full name"/></div>
@@ -928,7 +920,25 @@ async function loadData(){
   if(ar.error)console.error('Attendance:',ar.error);
   allMembers=(mr.data||[]).map(dbToM);
   allAttendance=(ar.data||[]).map(dbToA);
+  refreshLeaderDropdowns();
   refreshSidebar();populateFilters();updateTopbar();renderAll();
+}
+
+function refreshLeaderDropdowns(){
+  // Collect all leader names: from .leader field + members whose role is 'Leader'/'uGroup Leader'
+  const names = new Set();
+  allMembers.forEach(m => {
+    if(m.leader) names.add(m.leader.trim());
+    if(m.role && /^(ugroup\s*)?leader$/i.test(m.role.trim())) names.add(m.name.trim());
+  });
+  const sorted = [...names].sort((a,b)=>a.localeCompare(b));
+  const makeOptions = (placeholder) =>
+    `<option value="">${placeholder}</option>` +
+    sorted.map(n=>`<option value="${n}">${n}</option>`).join('');
+  const fl = document.getElementById('f-leader');
+  const ul = document.getElementById('ug-leader');
+  if(fl){ const cur=fl.value; fl.innerHTML=makeOptions('Select…'); fl.value=cur; }
+  if(ul){ const cur=ul.value; ul.innerHTML=makeOptions('Select leader…'); ul.value=cur; }
 }
 
 function exportData(){
