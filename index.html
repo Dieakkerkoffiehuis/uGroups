@@ -34,6 +34,9 @@ html{background:var(--surface,#0B0F19);}
   --red-muted:      rgba(239,68,68,.12);
   --gold:           #F59E0B;
   --gold-muted:     rgba(245,158,11,.12);
+  --orange:         #F97316;
+  --orange-muted:   rgba(249,115,22,.14);
+  --green-deep:     #047857;
   --pink:           #E75480;
   --blue:           #4A90D9;
   --radius:         10px;
@@ -60,6 +63,9 @@ html{background:var(--surface,#0B0F19);}
   --red-muted:      rgba(220,38,38,.10);
   --gold:           #D97706;
   --gold-muted:     rgba(217,119,6,.10);
+  --orange:         #EA580C;
+  --orange-muted:   rgba(234,88,12,.10);
+  --green-deep:     #065F46;
   --pink:           #DB2777;
   --blue:           #2563EB;
   --radius:         10px;
@@ -407,6 +413,88 @@ tbody tr:hover td{background:var(--surface-hover);}
   .cc-priority-grid{grid-template-columns:1fr 1fr;}
 }
 
+/* ══════════ ATTENDANCE INTELLIGENCE ══════════ */
+.ai-header{margin-bottom:20px;}
+.ai-header h1{font-size:20px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;}
+.ai-header p{font-size:13px;color:var(--text-secondary);}
+
+.ai-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.ai-toolbar .filter-select{font-size:12px;}
+.ai-legend{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:11px;color:var(--text-secondary);flex-wrap:wrap;}
+.ai-legend-item{display:flex;align-items:center;gap:5px;}
+.ai-legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+/* Heatmap */
+.ai-heatmap-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
+.ai-heatmap-scroll{overflow-x:auto;}
+.ai-heatmap{border-collapse:separate;border-spacing:4px;font-size:11px;width:100%;}
+.ai-heatmap th{font-weight:600;color:var(--text-secondary);font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:6px 8px;text-align:center;white-space:nowrap;}
+.ai-heatmap th.ai-row-head{text-align:left;}
+.ai-heatmap td.ai-row-head{
+  text-align:left;padding:8px 12px;white-space:nowrap;background:var(--surface-subtle);
+  border-radius:8px;min-width:170px;
+}
+.ai-rh-name{font-weight:700;font-size:12px;color:var(--text-primary);}
+.ai-rh-sub{font-size:10px;color:var(--text-muted);margin-top:1px;}
+.ai-cell{
+  width:46px;height:40px;border-radius:8px;text-align:center;vertical-align:middle;
+  font-weight:700;font-size:13px;cursor:default;position:relative;transition:transform .12s;
+}
+.ai-cell:hover{transform:scale(1.08);z-index:2;}
+.ai-cell.ai-low::after{
+  content:'⚠';position:absolute;top:-5px;right:-3px;font-size:10px;
+}
+.ai-cell-excellent{background:var(--green-deep);color:#fff;}
+.ai-cell-healthy{background:var(--green);color:#fff;}
+.ai-cell-moderate{background:var(--gold);color:#1a1400;}
+.ai-cell-concerning{background:var(--orange);color:#fff;}
+.ai-cell-problem{background:var(--red);color:#fff;}
+.ai-cell-nodata{background:var(--surface-subtle);color:var(--text-muted);font-weight:400;}
+
+/* Group Intelligence table */
+.ai-trend-up{color:var(--green);font-weight:700;}
+.ai-trend-down{color:var(--red);font-weight:700;}
+.ai-trend-flat{color:var(--text-secondary);font-weight:700;}
+.ai-mini-bars{display:inline-flex;align-items:flex-end;gap:2px;height:22px;vertical-align:middle;}
+.ai-mini-bar{width:4px;border-radius:1px;background:var(--accent);min-height:2px;}
+.ai-status-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap;}
+
+/* Insights */
+.ai-insight-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.ai-insight{
+  display:flex;align-items:flex-start;gap:10px;background:var(--surface-raised);
+  border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-size:12.5px;
+}
+.ai-insight-icon{font-size:15px;flex-shrink:0;line-height:1.4;}
+
+/* Alerts */
+.ai-alert-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px;}
+.ai-alert-col{background:var(--surface-raised);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.ai-alert-col h4{font-size:12px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.ai-alert-chip{
+  display:flex;justify-content:space-between;gap:8px;font-size:11.5px;
+  padding:8px 10px;border-radius:8px;margin-bottom:6px;
+}
+.ai-alert-chip:last-child{margin-bottom:0;}
+.ai-alert-red{background:var(--red-muted);color:var(--red);}
+.ai-alert-yellow{background:var(--gold-muted);color:var(--gold);}
+.ai-alert-green{background:var(--green-muted);color:var(--green);}
+.ai-alert-chip b{color:var(--text-primary);font-weight:700;}
+
+/* Forecast */
+.ai-forecast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:24px;}
+.ai-forecast-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.ai-forecast-card h5{font-size:12.5px;font-weight:700;margin-bottom:2px;}
+.ai-forecast-card .ai-fc-sub{font-size:10.5px;color:var(--text-muted);margin-bottom:12px;}
+.ai-fc-row{display:flex;justify-content:space-between;font-size:11.5px;padding:4px 0;border-bottom:1px solid var(--border-subtle);}
+.ai-fc-row:last-child{border-bottom:none;}
+.ai-fc-row span:last-child{font-weight:700;color:var(--text-primary);}
+.ai-fc-launch{margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--accent-muted);color:var(--accent);font-size:11px;font-weight:600;text-align:center;}
+
+@media (max-width:900px){
+  .ai-alert-grid{grid-template-columns:1fr;}
+}
+
 /* ── Modal ── */
 .modal-overlay{
   display:none;position:fixed;inset:0;
@@ -743,31 +831,82 @@ tbody tr:hover td{background:var(--surface-hover);}
         </div>
       </div>
 
-      <!-- VIEW: ATTENDANCE -->
+      <!-- VIEW: ATTENDANCE INTELLIGENCE -->
       <div id="view-attendance" style="display:none;">
-        <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
-          <select class="filter-select" id="filter-group-att" onchange="renderAttView()">
+        <div class="ai-header">
+          <h1>Attendance Intelligence</h1>
+          <p>Track attendance health, growth trends, multiplication readiness, and coaching opportunities across all uGroups.</p>
+        </div>
+
+        <!-- Section 1: KPI Summary -->
+        <div class="kpi-grid" id="ai-kpi-grid"></div>
+
+        <!-- Section 2: Heatmap -->
+        <div class="section-head">
+          <h3 style="font-size:15px;font-weight:700;">Attendance Heatmap</h3>
+        </div>
+        <div class="ai-toolbar">
+          <select class="filter-select" id="ai-filter-group" onchange="renderAttView()">
             <option value="ALL">All uGroups</option>
           </select>
-          <select class="filter-select" id="filter-date-att" onchange="clearWeekFilter();renderAttView()">
-            <option value="ALL">All Dates</option>
+          <select class="filter-select" id="ai-weeks-range" onchange="renderAttView()">
+            <option value="8">Last 8 weeks</option>
+            <option value="12" selected>Last 12 weeks</option>
+            <option value="16">Last 16 weeks</option>
           </select>
-          <button id="btn-this-week" onclick="setWeekFilter('this')"
-            style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);
-              background:var(--surface-subtle);color:var(--text-secondary);
-              font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">
-            📅 This Week
-          </button>
-          <button id="btn-last-week" onclick="setWeekFilter('last')"
-            style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);
-              background:var(--surface-subtle);color:var(--text-secondary);
-              font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">
-            ⏮ Last Week
-          </button>
+          <select class="filter-select" id="ai-sort-key" onchange="renderAttView()">
+            <option value="readiness" selected>Sort: Multiplication Readiness</option>
+            <option value="health">Sort: Health Score</option>
+            <option value="pct">Sort: Attendance %</option>
+            <option value="growth">Sort: Attendance Growth</option>
+            <option value="consistency">Sort: Consistency</option>
+            <option value="size">Sort: Group Size</option>
+            <option value="leader">Sort: Leader Name</option>
+          </select>
+          <div class="ai-legend">
+            <span class="ai-legend-item"><span class="ai-legend-dot" style="background:var(--green-deep);"></span>Excellent</span>
+            <span class="ai-legend-item"><span class="ai-legend-dot" style="background:var(--green);"></span>Healthy</span>
+            <span class="ai-legend-item"><span class="ai-legend-dot" style="background:var(--gold);"></span>Moderate</span>
+            <span class="ai-legend-item"><span class="ai-legend-dot" style="background:var(--orange);"></span>Concerning</span>
+            <span class="ai-legend-item"><span class="ai-legend-dot" style="background:var(--red);"></span>Problem</span>
+            <span class="ai-legend-item"><span class="ai-legend-dot" style="background:var(--surface-subtle);border:1px solid var(--border);"></span>No data</span>
+          </div>
         </div>
-        <div class="table-card">
-          <div class="table-wrap" id="att-table"></div>
+        <div class="ai-heatmap-card">
+          <div class="ai-heatmap-scroll" id="ai-heatmap"></div>
         </div>
+
+        <!-- Section 3+4: Group Intelligence table (Trend + Multiplication Overlay combined) -->
+        <div class="section-head">
+          <h3 style="font-size:15px;font-weight:700;">Group Intelligence</h3>
+        </div>
+        <div class="table-card" style="margin-bottom:24px;">
+          <div class="table-wrap" id="ai-group-table"></div>
+        </div>
+
+        <!-- Section 5: AI Coaching Insights -->
+        <div class="section-head">
+          <h3 style="font-size:15px;font-weight:700;">AI Coaching Insights</h3>
+        </div>
+        <div class="ai-insight-list" id="ai-insights"></div>
+
+        <!-- Section 6: Automatic Alerts -->
+        <div class="section-head">
+          <h3 style="font-size:15px;font-weight:700;">Automatic Alerts</h3>
+        </div>
+        <div class="ai-alert-grid" id="ai-alerts"></div>
+
+        <!-- Section 7: Growth Forecast -->
+        <div class="section-head">
+          <h3 style="font-size:15px;font-weight:700;">Growth Forecast</h3>
+        </div>
+        <div class="ai-forecast-grid" id="ai-forecast"></div>
+
+        <!-- Section 10: Weekly Area Leader Actions -->
+        <div class="section-head">
+          <h3 style="font-size:15px;font-weight:700;">This Week's Area Leader Actions</h3>
+        </div>
+        <div class="cc-priority-grid" id="ai-actions"></div>
       </div>
 
 
@@ -1267,11 +1406,11 @@ function showView(v){
   });
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.querySelector(`.nav-item[onclick*="${v}"]`)?.classList.add('active');
-  const titles={command:'Command Centre',overview:'Insights',members:'Members',attendance:'Attendance',pipeline:'Leadership Pipeline'};
+  const titles={command:'Command Centre',overview:'Insights',members:'Members',attendance:'Attendance Intelligence',pipeline:'Leadership Pipeline'};
   document.getElementById('topbar-title').textContent=titles[v]||v;
   if(v==='command'){try{renderCommandCentre();}catch(e){console.error('command centre error',e);}}
   if(v==='members'){populateMemberFilters();renderMembersView();}
-  if(v==='attendance'){populateAttFilters();renderAttView();}
+  if(v==='attendance'){try{populateAiFilters();renderAttView();}catch(e){console.error('attendance intelligence error',e);}}
   if(v==='pipeline'){try{renderPipeline();}catch(e){console.error('pipeline error',e);}}
 }
 
@@ -1312,11 +1451,12 @@ function populateMemberFilters(){
   const groups=['ALL',...[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort()];
   document.getElementById('filter-group-members').innerHTML=groups.map(g=>`<option value="${g}">${g==='ALL'?'All uGroups':g}</option>`).join('');
 }
-function populateAttFilters(){
-  const groups=['ALL',...[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort()];
-  const dates=['ALL',...[...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort().reverse()];
-  document.getElementById('filter-group-att').innerHTML=groups.map(g=>`<option value="${g}">${g==='ALL'?'All uGroups':g}</option>`).join('');
-  document.getElementById('filter-date-att').innerHTML=dates.map(d=>`<option value="${d}">${d==='ALL'?'All Dates':d}</option>`).join('');
+function populateAiFilters(){
+  const sel=document.getElementById('ai-filter-group');
+  const prev=sel.value||'ALL';
+  const groups=['ALL',...meGetGroups()];
+  sel.innerHTML=groups.map(g=>`<option value="${g}">${g==='ALL'?'All uGroups':g}</option>`).join('');
+  sel.value=groups.includes(prev)?prev:'ALL';
 }
 
 function getF(){return{group:document.getElementById('filter-group').value,date:document.getElementById('filter-date').value};}
@@ -1527,9 +1667,6 @@ function renderMembersView(){
     <div class="table-footer">${members.length} member${members.length!==1?'s':''}${memberNewFilter?' · new this week':''}</div>`;
 }
 
-// Attendance view — week filter state
-let attWeekFilter = null; // null | 'this' | 'last'
-
 function getWeekRange(which) {
   const now = new Date();
   const day = now.getDay(); // 0=Sun,1=Mon,...
@@ -1544,50 +1681,321 @@ function getWeekRange(which) {
   return { from: mon.toISOString().split('T')[0], to: sun.toISOString().split('T')[0] };
 }
 
-function setWeekFilter(which) {
-  attWeekFilter = which;
-  // Reset the date dropdown to ALL so it doesn't conflict
-  document.getElementById('filter-date-att').value = 'ALL';
-  // Highlight the active button
-  document.getElementById('btn-this-week').style.background = which==='this' ? 'var(--accent)' : 'var(--surface-subtle)';
-  document.getElementById('btn-this-week').style.color    = which==='this' ? '#fff' : 'var(--text-secondary)';
-  document.getElementById('btn-this-week').style.borderColor = which==='this' ? 'var(--accent)' : 'var(--border)';
-  document.getElementById('btn-last-week').style.background = which==='last' ? 'var(--accent)' : 'var(--surface-subtle)';
-  document.getElementById('btn-last-week').style.color    = which==='last' ? '#fff' : 'var(--text-secondary)';
-  document.getElementById('btn-last-week').style.borderColor = which==='last' ? 'var(--accent)' : 'var(--border)';
-  renderAttView();
-}
+// ════════ ATTENDANCE INTELLIGENCE ENGINE (ai*) ════════
+let aiWeeksRange = 12;
+let aiSortKey = 'readiness';
+const AI_LOW_ATTENDANCE_THRESHOLD = 4;
 
-function clearWeekFilter() {
-  attWeekFilter = null;
-  document.getElementById('btn-this-week').style.background = 'var(--surface-subtle)';
-  document.getElementById('btn-this-week').style.color = 'var(--text-secondary)';
-  document.getElementById('btn-this-week').style.borderColor = 'var(--border)';
-  document.getElementById('btn-last-week').style.background = 'var(--surface-subtle)';
-  document.getElementById('btn-last-week').style.color = 'var(--text-secondary)';
-  document.getElementById('btn-last-week').style.borderColor = 'var(--border)';
+function addDaysISO(iso,days){
+  const d=new Date(iso); if(isNaN(d))return iso;
+  d.setDate(d.getDate()+days);
+  return d.toISOString().split('T')[0];
 }
-
-function renderAttView(){
-  const fg=document.getElementById('filter-group-att').value;
-  const fd=document.getElementById('filter-date-att').value;
-  let att=allAttendance.filter(a=>(fg==='ALL'||a.ugroup===fg)&&a.name);
-  if(attWeekFilter){
-    const {from,to}=getWeekRange(attWeekFilter);
-    att=att.filter(a=>a.date>=from&&a.date<=to);
-  } else if(fd!=='ALL'){
-    att=att.filter(a=>a.date===fd);
+function formatShortDate(iso){
+  const d=new Date(iso); if(isNaN(d))return iso;
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function aiAllDates(){
+  return [...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort();
+}
+function aiVisibleDates(){
+  return aiAllDates().slice(-aiWeeksRange);
+}
+function aiConsecutiveDeclineWeeks(byDate){
+  let count=0;
+  for(let i=byDate.length-1;i>0;i--){ if(byDate[i].present<byDate[i-1].present)count++; else break; }
+  return count;
+}
+function aiConsecutiveGrowthWeeks(byDate){
+  let count=0;
+  for(let i=byDate.length-1;i>0;i--){ if(byDate[i].present>byDate[i-1].present)count++; else break; }
+  return count;
+}
+function aiConsecutiveAboveWeeks(byDate,thresholdPct){
+  let count=0;
+  for(let i=byDate.length-1;i>=0;i--){ if(byDate[i].pct>=thresholdPct)count++; else break; }
+  return count;
+}
+function aiCell(g,date){
+  const recs=allAttendance.filter(a=>a.ugroup===g&&a.date===date&&a.name);
+  if(!recs.length) return {present:0,total:0,pct:0,tier:'nodata',hasData:false};
+  const present=recs.filter(a=>(a.present||'').toLowerCase()==='yes').length;
+  const total=recs.length;
+  const pct=total?Math.round(present/total*100):0;
+  let tier;
+  if(pct>=90)tier='excellent';
+  else if(pct>=75)tier='healthy';
+  else if(pct>=60)tier='moderate';
+  else if(pct>=40)tier='concerning';
+  else tier='problem';
+  return{present,total,pct,tier,hasData:true};
+}
+function aiCellDetail(g,date){
+  const cell=aiCell(g,date);
+  const members=meGroupMembers(g);
+  const presentNames=allAttendance.filter(a=>a.ugroup===g&&a.date===date&&a.name&&(a.present||'').toLowerCase()==='yes').map(a=>a.name);
+  const presentMembers=presentNames.map(n=>members.find(m=>m.name===n)).filter(Boolean);
+  const visitors=presentMembers.filter(m=>(m.memberStatus||'').toLowerCase()==='visitor').length;
+  const weekBefore=addDaysISO(date,-7);
+  const newMembers=presentMembers.filter(m=>{const d=parseAnyDate(m.joinDate);if(!d)return false;const iso=d.toISOString().split('T')[0];return iso>=weekBefore&&iso<=date;}).length;
+  const baptisms=presentMembers.filter(m=>(m.baptised||'').toLowerCase()==='yes').length;
+  const hrAvg=presentMembers.length?Math.round(presentMembers.reduce((s,m)=>{let pts=0;if((m.hr1||'').toLowerCase()==='yes')pts+=25;if((m.hr2||'').toLowerCase()==='yes')pts+=25;if((m.hr3||'').toLowerCase()==='yes')pts+=25;if((m.hr4||'').toLowerCase()==='yes')pts+=25;return s+pts;},0)/presentMembers.length):0;
+  const usmCount=presentMembers.filter(m=>(m.usm||'').toLowerCase()!=='none'&&m.usm).length;
+  const leader=meGroupLeaderName(g);
+  const assistant=meGroupAssistant(g);
+  return{cell,visitors,newMembers,baptisms,hrAvg,usmCount,leader,assistant:assistant?assistant.name:'None'};
+}
+function aiGroupSummary(g){
+  const members=meGroupMembers(g);
+  const memberCount=members.length;
+  const byDate=meGroupAttendanceByDate(g);
+  const last=byDate[byDate.length-1]||{present:0,total:memberCount,pct:0,date:null};
+  const w6=byDate.slice(-6), w12=byDate.slice(-12);
+  const avg6=w6.length?Math.round(w6.reduce((s,w)=>s+w.present,0)/w6.length):0;
+  const avg12=w12.length?Math.round(w12.reduce((s,w)=>s+w.present,0)/w12.length):0;
+  const att=meAttendanceStability(g);
+  const readiness=meReadiness(g);
+  const health=meHealth(g);
+  const assistant=meGroupAssistant(g);
+  const futureLeaders=meFutureLeadersOf(g);
+  const leader=meGroupLeaderName(g);
+  const attendancePct=last.total?last.pct:(memberCount?Math.round(last.present/memberCount*100):0);
+  const recent3=byDate.slice(-3), prior3=byDate.slice(-6,-3);
+  const recentAvgPresent=recent3.length?recent3.reduce((s,w)=>s+w.present,0)/recent3.length:0;
+  const priorAvgPresent=prior3.length?prior3.reduce((s,w)=>s+w.present,0)/prior3.length:recentAvgPresent;
+  const growthPct=priorAvgPresent>0?Math.round((recentAvgPresent-priorAvgPresent)/priorAvgPresent*100):(recentAvgPresent>0?100:0);
+  let trendIcon,trendLabel,trendClass;
+  if(att.trend==='up'){trendIcon='↑';trendLabel='Growing';trendClass='ai-trend-up';}
+  else if(att.trend==='down'){trendIcon='↓';trendLabel='Declining';trendClass='ai-trend-down';}
+  else{trendIcon='→';trendLabel='Stable';trendClass='ai-trend-flat';}
+  const last8Dates=byDate.slice(-8).map(w=>w.date);
+  const visitorCount=allAttendance.filter(a=>a.ugroup===g&&last8Dates.includes(a.date)&&(a.present||'').toLowerCase()==='yes').filter(a=>{
+    const mem=members.find(m=>m.name===a.name);
+    return mem&&(mem.memberStatus||'').toLowerCase()==='visitor';
+  }).length;
+  const noVisitors8wk=visitorCount===0&&last8Dates.length>0;
+  const lowAttendanceFlag=last.total>0&&last.present<=AI_LOW_ATTENDANCE_THRESHOLD;
+  return{
+    group:g,leader,memberCount,assistant,hasAssistant:!!assistant,
+    futureLeaders,hasFutureLeader:futureLeaders.length>0,
+    last,avg6,avg12,attendancePct,growthPct,
+    consistency:att.score,trend:att.trend,trendIcon,trendLabel,trendClass,
+    readiness,health,byDate,noVisitors8wk,lowAttendanceFlag,
+    decliningWeeks:aiConsecutiveDeclineWeeks(byDate)
+  };
+}
+function aiSortGroups(list,key){
+  const arr=[...list];
+  switch(key){
+    case 'health': return arr.sort((a,b)=>b.health.healthScore-a.health.healthScore);
+    case 'pct': return arr.sort((a,b)=>b.attendancePct-a.attendancePct);
+    case 'growth': return arr.sort((a,b)=>b.growthPct-a.growthPct);
+    case 'consistency': return arr.sort((a,b)=>b.consistency-a.consistency);
+    case 'size': return arr.sort((a,b)=>b.memberCount-a.memberCount);
+    case 'leader': return arr.sort((a,b)=>(a.leader||'').localeCompare(b.leader||''));
+    case 'readiness':
+    default: return arr.sort((a,b)=>b.readiness.pct-a.readiness.pct);
   }
-  const div=document.getElementById('att-table');
-  if(!att.length){div.innerHTML='<p class="empty">No attendance records found.</p>';return;}
-  const shown=att.slice(0,300);
-  // Build label for footer
-  let rangeLabel='';
-  if(attWeekFilter){const r=getWeekRange(attWeekFilter);rangeLabel=` · ${r.from} → ${r.to}`;}
-  div.innerHTML=`<table>
-    <thead><tr><th>Date</th><th>uGroup</th><th>Member</th><th>Role</th><th>Present</th></tr></thead>
-    <tbody>${shown.map(a=>`<tr><td>${a.date}</td><td>${a.ugroup}</td><td>${a.name}</td><td>${a.role||'—'}</td><td>${badge(a.present)}</td></tr>`).join('')}</tbody></table>
-    <div class="table-footer">${att.length>300?`Showing 300 of ${att.length}${rangeLabel} — use filters to narrow down`:`${att.length} record${att.length!==1?'s':''}${rangeLabel}`}</div>`;
+}
+function aiAlerts(groups){
+  const red=[],yellow=[],green=[];
+  groups.forEach(g=>{
+    const s=aiGroupSummary(g);
+    if(s.attendancePct<65) red.push({leader:s.leader,text:'Attendance below 65%'});
+    if(s.decliningWeeks>=3) red.push({leader:s.leader,text:'Declining 3+ consecutive weeks'});
+    if(!s.hasAssistant) red.push({leader:s.leader,text:'No assistant identified'});
+    if(!s.hasFutureLeader) red.push({leader:s.leader,text:'No future leader identified'});
+    if(s.noVisitors8wk) red.push({leader:s.leader,text:'No visitors in 8 weeks'});
+    if(s.lowAttendanceFlag) red.push({leader:s.leader,text:`Critically low attendance (${s.last.present} present)`});
+    if(s.trend==='flat') yellow.push({leader:s.leader,text:'Attendance stagnant'});
+    if(s.health.components.discipleshipProgress<20) yellow.push({leader:s.leader,text:'No Homerun progress'});
+    const members=meGroupMembers(g);
+    if(!members.some(m=>(m.usm||'').toLowerCase()!=='none'&&m.usm)) yellow.push({leader:s.leader,text:'No USM progress'});
+    if(s.readiness.status==='ready') green.push({leader:s.leader,text:'Ready to multiply'});
+    if(s.trend==='up') green.push({leader:s.leader,text:'Attendance increasing'});
+    if(s.hasAssistant&&s.hasFutureLeader) green.push({leader:s.leader,text:'Leadership pipeline healthy'});
+  });
+  return{red,yellow,green};
+}
+function aiInsights(){
+  const out=[];
+  meGetGroups().forEach(g=>{
+    const s=aiGroupSummary(g);
+    const aboveWeeks=aiConsecutiveAboveWeeks(s.byDate,80);
+    if(aboveWeeks>=4) out.push({icon:'🟢',text:`${s.leader}'s uGroup has maintained attendance above 80% for ${aboveWeeks} consecutive weeks.`});
+    const growthWeeks=aiConsecutiveGrowthWeeks(s.byDate);
+    if(growthWeeks>=3) out.push({icon:'📈',text:`${s.leader}'s uGroup has shown growth for ${growthWeeks} consecutive weeks.`});
+    if(s.growthPct<=-15) out.push({icon:'🔻',text:`${s.leader}'s uGroup attendance has declined ${Math.abs(s.growthPct)}% over the last month.`});
+    if(s.lowAttendanceFlag) out.push({icon:'🚨',text:`${s.leader}'s uGroup had only ${s.last.present} members present last session.`});
+    if(!s.hasAssistant) out.push({icon:'⚠️',text:`${s.leader}'s uGroup has no identified assistant.`});
+    if(s.attendancePct>=75&&!s.hasFutureLeader) out.push({icon:'⚠️',text:`${s.leader}'s uGroup has strong attendance but no future leader identified.`});
+  });
+  return out.slice(0,10);
+}
+function aiForecast(s){
+  const current=s.last.present||0;
+  const weeklyRate=s.growthPct?(s.growthPct/100)/3:0;
+  const proj=n=>Math.max(0,Math.round(current*Math.pow(1+weeklyRate,n)));
+  let launchLabel;
+  if(s.readiness.status==='ready'){ launchLabel='Ready now'; }
+  else{
+    const gap=Math.max(1,75-s.readiness.pct);
+    const weeksNeeded=Math.ceil(gap/2);
+    const d=new Date(); d.setDate(d.getDate()+weeksNeeded*7);
+    launchLabel=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  }
+  return{f4:proj(4),f8:proj(8),f12:proj(12),launchLabel};
+}
+
+// ════════ ATTENDANCE INTELLIGENCE RENDER ════════
+function renderAttView(){
+  const fgEl=document.getElementById('ai-filter-group');
+  const fg=fgEl?fgEl.value:'ALL';
+  aiWeeksRange=parseInt(document.getElementById('ai-weeks-range').value,10)||12;
+  aiSortKey=document.getElementById('ai-sort-key').value||'readiness';
+  let groups=meGetGroups();
+  if(fg!=='ALL') groups=groups.filter(g=>g===fg);
+  if(!groups.length){
+    document.getElementById('ai-kpi-grid').innerHTML='<p class="empty">No uGroups yet.</p>';
+    document.getElementById('ai-heatmap').innerHTML='';
+    document.getElementById('ai-group-table').innerHTML='<p class="empty">No uGroups yet.</p>';
+    document.getElementById('ai-insights').innerHTML='<p class="empty">No data yet.</p>';
+    document.getElementById('ai-alerts').innerHTML='';
+    document.getElementById('ai-forecast').innerHTML='';
+    document.getElementById('ai-actions').innerHTML='';
+    return;
+  }
+  const summaries=groups.map(g=>aiGroupSummary(g));
+  const sorted=aiSortGroups(summaries,aiSortKey);
+  renderAiKpis(summaries);
+  renderAiHeatmap(sorted);
+  renderAiGroupTable(sorted);
+  renderAiInsights();
+  renderAiAlerts(groups);
+  renderAiForecast(sorted);
+  renderAiActions();
+}
+function renderAiKpis(summaries){
+  const totalMembers=summaries.reduce((s,x)=>s+x.memberCount,0);
+  const avgAttendance=summaries.length?Math.round(summaries.reduce((s,x)=>s+(x.last.present||0),0)/summaries.length):0;
+  const avgPct=summaries.length?Math.round(summaries.reduce((s,x)=>s+x.attendancePct,0)/summaries.length):0;
+  const avgGrowth=summaries.length?Math.round(summaries.reduce((s,x)=>s+x.growthPct,0)/summaries.length):0;
+  const best=[...summaries].sort((a,b)=>b.attendancePct-a.attendancePct)[0];
+  const mostImproved=[...summaries].sort((a,b)=>b.growthPct-a.growthPct)[0];
+  const mostConsistent=[...summaries].sort((a,b)=>b.consistency-a.consistency)[0];
+  const atRisk=summaries.filter(x=>x.health.healthScore<60).length;
+  const readyToMultiply=summaries.filter(x=>x.readiness.status==='ready').length;
+  const cards=[
+    {label:'Total Members',value:totalMembers},
+    {label:'Average Attendance',value:avgAttendance},
+    {label:'Attendance %',value:avgPct+'%'},
+    {label:'Attendance Growth %',value:(avgGrowth>=0?'+':'')+avgGrowth+'%',trend:avgGrowth>0?'up':avgGrowth<0?'down':'neutral'},
+    {label:'Best Performing Group',value:best?best.leader+"'s uGroup":'—'},
+    {label:'Most Improved Group',value:mostImproved?mostImproved.leader+"'s uGroup":'—'},
+    {label:'Most Consistent Group',value:mostConsistent?mostConsistent.leader+"'s uGroup":'—'},
+    {label:'Groups At Risk',value:atRisk},
+    {label:'Groups Ready To Multiply',value:readyToMultiply},
+  ];
+  document.getElementById('ai-kpi-grid').innerHTML=cards.map(c=>`
+    <div class="kpi-card">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+      ${c.trend?`<div class="kpi-trend trend-${c.trend}">${c.trend==='up'?'↑':c.trend==='down'?'↓':'→'} vs last month</div>`:''}
+    </div>`).join('');
+}
+function renderAiHeatmap(sorted){
+  const dates=aiVisibleDates();
+  const el=document.getElementById('ai-heatmap');
+  if(!dates.length){el.innerHTML='<p class="empty" style="padding:24px;">No attendance records yet.</p>';return;}
+  const header=`<tr><th class="ai-row-head">uGroup</th>${dates.map(d=>`<th>${formatShortDate(d)}</th>`).join('')}</tr>`;
+  const rows=sorted.map(s=>{
+    const cells=dates.map(d=>{
+      const detail=aiCellDetail(s.group,d);
+      const c=detail.cell;
+      const tip=c.hasData
+        ?`Date: ${d}\nAttendance: ${c.present}/${c.total} (${c.pct}%)\nVisitors: ${detail.visitors}\nNew Members: ${detail.newMembers}\nBaptisms: ${detail.baptisms}\nHomerun Progress: ${detail.hrAvg}%\nUSM Progress: ${detail.usmCount}\nLeader: ${detail.leader}\nAssistant: ${detail.assistant}`
+        :`Date: ${d}\nNo data recorded`;
+      const lowFlag=c.hasData&&c.present<=AI_LOW_ATTENDANCE_THRESHOLD;
+      return `<td class="ai-cell ai-cell-${c.tier}${lowFlag?' ai-low':''}" title="${tip.replace(/"/g,'&quot;')}">${c.hasData?c.present:'—'}</td>`;
+    }).join('');
+    return `<tr><td class="ai-row-head"><div class="ai-rh-name">${s.leader}'s uGroup</div><div class="ai-rh-sub">${s.memberCount} members · ${s.health.tier}</div></td>${cells}</tr>`;
+  }).join('');
+  el.innerHTML=`<table class="ai-heatmap">${header}${rows}</table>`;
+}
+function renderAiGroupTable(sorted){
+  const el=document.getElementById('ai-group-table');
+  if(!sorted.length){el.innerHTML='<p class="empty">No uGroups yet.</p>';return;}
+  el.innerHTML=`<table>
+    <thead><tr>
+      <th>uGroup</th><th>Members</th><th>Assistant</th><th>Future Leader</th>
+      <th>Current</th><th>6Wk Avg</th><th>12Wk Avg</th><th>Attendance %</th>
+      <th>Growth %</th><th>Consistency</th><th>Trend</th>
+      <th>Readiness</th><th>Health</th><th>Status</th>
+    </tr></thead>
+    <tbody>${sorted.map(s=>{
+      const statusColor=(s.health.tier==='Exceptional'||s.health.tier==='Strong'||s.health.tier==='Healthy')?'green':s.health.tier==='Needs Coaching'?'gold':'red';
+      return `<tr>
+        <td><strong>${s.leader}'s uGroup</strong></td>
+        <td>${s.memberCount}</td>
+        <td>${s.hasAssistant?badge('Yes'):badge('No')}</td>
+        <td>${s.hasFutureLeader?badge('Yes'):badge('No')}</td>
+        <td>${s.last.present}${s.lowAttendanceFlag?' ⚠️':''}</td>
+        <td>${s.avg6}</td>
+        <td>${s.avg12}</td>
+        <td>${s.attendancePct}%</td>
+        <td>${s.growthPct>=0?'+':''}${s.growthPct}%</td>
+        <td>${s.consistency}</td>
+        <td class="${s.trendClass}">${s.trendIcon} ${s.trendLabel}</td>
+        <td>${s.readiness.pct}%</td>
+        <td>${s.health.healthScore}/100</td>
+        <td><span class="ai-status-pill" style="background:var(--${statusColor}-muted);color:var(--${statusColor});">${s.readiness.status==='ready'?'Ready To Multiply':s.health.tier}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+function renderAiInsights(){
+  const insights=aiInsights();
+  const el=document.getElementById('ai-insights');
+  if(!insights.length){el.innerHTML='<p class="empty">Not enough data yet for coaching insights.</p>';return;}
+  el.innerHTML=insights.map(i=>`<div class="ai-insight"><span class="ai-insight-icon">${i.icon}</span><span>${i.text}</span></div>`).join('');
+}
+function renderAiAlerts(groups){
+  const {red,yellow,green}=aiAlerts(groups);
+  const el=document.getElementById('ai-alerts');
+  const col=(title,icon,items,cls)=>`
+    <div class="ai-alert-col">
+      <h4>${icon} ${title} (${items.length})</h4>
+      ${items.length?items.map(i=>`<div class="ai-alert-chip ${cls}"><span><b>${i.leader}</b></span><span>${i.text}</span></div>`).join(''):'<p class="empty" style="font-size:11px;">None</p>'}
+    </div>`;
+  el.innerHTML=col('Red Alerts','🔴',red,'ai-alert-red')+col('Yellow Alerts','🟡',yellow,'ai-alert-yellow')+col('Green Alerts','🟢',green,'ai-alert-green');
+}
+function renderAiForecast(sorted){
+  const el=document.getElementById('ai-forecast');
+  if(!sorted.length){el.innerHTML='';return;}
+  el.innerHTML=sorted.map(s=>{
+    const f=aiForecast(s);
+    return `<div class="ai-forecast-card">
+      <h5>${s.leader}'s uGroup</h5>
+      <div class="ai-fc-sub">Current readiness: ${s.readiness.pct}%</div>
+      <div class="ai-fc-row"><span>4 Week Projection</span><span>${f.f4}</span></div>
+      <div class="ai-fc-row"><span>8 Week Projection</span><span>${f.f8}</span></div>
+      <div class="ai-fc-row"><span>12 Week Projection</span><span>${f.f12}</span></div>
+      <div class="ai-fc-launch">${s.readiness.status==='ready'?'Ready to launch now':'Projected ready: '+f.launchLabel}</div>
+    </div>`;
+  }).join('');
+}
+function renderAiActions(){
+  const p=meWeeklyPriorities();
+  const el=document.getElementById('ai-actions');
+  const block=(label,items,render)=>`
+    <div class="cc-priority-card">
+      <div class="cc-priority-label">${label}</div>
+      ${items.length?items.map(render).join(''):'<div class="cc-priority-item" style="color:var(--text-muted);">None this week</div>'}
+    </div>`;
+  el.innerHTML=
+    block('🎉 Celebrate',p.celebrate,x=>`<div class="cc-priority-item">${x.leader}'s uGroup — Health ${x.healthScore}/100</div>`)+
+    block('🧭 Coach',p.coach,x=>`<div class="cc-priority-item">${x.leader}'s uGroup — ${x.reasons[0]||'Needs attention'}</div>`)+
+    block('🌱 Develop',p.develop,x=>`<div class="cc-priority-item">${x.name} (${x.group}) — Score ${x.score}</div>`)+
+    block('🚀 Multiply',p.launch,x=>`<div class="cc-priority-item">${x.leader}'s uGroup — Readiness ${x.pct}%</div>`);
 }
 
 function badge(v){const l=(v||'').toLowerCase();
@@ -1812,20 +2220,21 @@ function meReadiness(g){
   else{status='needs-dev';statusLabel='🔴 Needs Development';}
   return{leadership,assistant,futureLeader,attendanceScore:att.score,attendanceTrend:att.trend,visitor,discipleship,pct,status,statusLabel};
 }
-// uGroup Health Score — 30% attendance + 20% leadership pipeline + 20% visitor growth + 20% mult. readiness + 10% baptisms
+// uGroup Health Score — 30% attendance consistency + 20% visitor activity + 20% leadership pipeline + 20% mult. readiness + 10% Homerun/USM progress
 function meHealth(g){
   const att=meAttendanceStability(g);
   const readiness=meReadiness(g);
   const leadershipPipeline=meFutureLeaderStrength(g);
   const visitorGrowth=meVisitorActivity(g);
-  const baptismRate=meBaptismRate(g);
-  const healthScore=Math.round(att.score*0.30+leadershipPipeline*0.20+visitorGrowth*0.20+readiness.pct*0.20+baptismRate*0.10);
+  const discipleshipProgress=meDiscipleshipProgress(g);
+  const healthScore=Math.round(att.score*0.30+visitorGrowth*0.20+leadershipPipeline*0.20+readiness.pct*0.20+discipleshipProgress*0.10);
   let tier;
-  if(healthScore>=80)tier='Strong';
-  else if(healthScore>=60)tier='Healthy';
-  else if(healthScore>=40)tier='At Risk';
-  else tier='Critical';
-  return{healthScore,tier,attendanceTrend:att.trend,components:{attendanceConsistency:att.score,leadershipPipeline,visitorGrowth,multiplicationReadiness:readiness.pct,baptismRate}};
+  if(healthScore>=90)tier='Exceptional';
+  else if(healthScore>=80)tier='Strong';
+  else if(healthScore>=70)tier='Healthy';
+  else if(healthScore>=60)tier='Needs Coaching';
+  else tier='At Risk';
+  return{healthScore,tier,attendanceTrend:att.trend,components:{attendanceConsistency:att.score,visitorGrowth,leadershipPipeline,multiplicationReadiness:readiness.pct,discipleshipProgress}};
 }
 function meAreaHealth(){
   const groups=meGetGroups();
