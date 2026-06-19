@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+<script>(function(){try{var t=localStorage.getItem('ug-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Unite180 — uGroup Dashboard</title>
@@ -11,7 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* ── Prevent flash ── */
-html{background:#0B0F19;}
+html{background:var(--surface,#0B0F19);}
 
 :root{
   --surface:        #0B0F19;
@@ -35,6 +36,32 @@ html{background:#0B0F19;}
   --gold-muted:     rgba(245,158,11,.12);
   --pink:           #E75480;
   --blue:           #4A90D9;
+  --radius:         10px;
+  --sidebar-w:      220px;
+}
+
+:root[data-theme="light"]{
+  --surface:        #F7F8FA;
+  --surface-raised: #FFFFFF;
+  --surface-subtle: #F0F2F5;
+  --surface-hover:  #E9ECF1;
+  --surface-overlay:#FFFFFF;
+  --sidebar:        #FFFFFF;
+  --border:         #E2E5EB;
+  --border-subtle:  #EAECF0;
+  --text-primary:   #161B26;
+  --text-secondary: #5B6376;
+  --text-muted:     #9098AA;
+  --accent:         #7C3AED;
+  --accent-muted:   rgba(124,58,237,.10);
+  --green:          #059669;
+  --green-muted:    rgba(5,150,105,.10);
+  --red:            #DC2626;
+  --red-muted:      rgba(220,38,38,.10);
+  --gold:           #D97706;
+  --gold-muted:     rgba(217,119,6,.10);
+  --pink:           #DB2777;
+  --blue:           #2563EB;
   --radius:         10px;
   --sidebar-w:      220px;
 }
@@ -563,6 +590,7 @@ tbody tr:hover td{background:var(--surface-hover);}
         <p id="topbar-sub">0 uGroups · 0 members</p>
       </div>
       <div class="topbar-right">
+        <button class="btn btn-ghost" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button>
         <button class="btn btn-purple" onclick="openUGroupModal()">+ uGroup</button>
         <button class="btn btn-primary" onclick="openMemberModal()">+ Member</button>
       </div>
@@ -703,6 +731,12 @@ tbody tr:hover td{background:var(--surface-hover);}
           </select>
           <input class="filter-select" id="member-search" type="text" placeholder="Search members…"
             oninput="renderMembersView()" style="width:200px;"/>
+          <button id="btn-new-this-week" onclick="toggleNewThisWeekFilter()"
+            style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);
+              background:var(--surface-subtle);color:var(--text-secondary);
+              font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">
+            🆕 New This Week
+          </button>
         </div>
         <div class="table-card">
           <div class="table-wrap" id="members-table"></div>
@@ -1444,16 +1478,42 @@ function renderWednesday(){
 }
 
 // Members view
+function parseAnyDate(v){
+  if(!v)return null;
+  let d;
+  if(v instanceof Date)d=v;
+  else if(typeof v==='number')d=new Date(Math.round((v-25569)*86400*1000));
+  else{d=new Date(v);if(isNaN(d))return null;}
+  if(isNaN(d.getTime()))return null;
+  return d;
+}
+function isNewThisWeek(m){
+  const d=parseAnyDate(m.joinDate);
+  if(!d)return false;
+  const iso=d.toISOString().split('T')[0];
+  const {from,to}=getWeekRange('this');
+  return iso>=from&&iso<=to;
+}
+let memberNewFilter=false; // toggles "New This Week" quick-filter
+function toggleNewThisWeekFilter(){
+  memberNewFilter=!memberNewFilter;
+  const btn=document.getElementById('btn-new-this-week');
+  btn.style.background = memberNewFilter ? 'var(--accent)' : 'var(--surface-subtle)';
+  btn.style.color    = memberNewFilter ? '#fff' : 'var(--text-secondary)';
+  btn.style.borderColor = memberNewFilter ? 'var(--accent)' : 'var(--border)';
+  renderMembersView();
+}
 function renderMembersView(){
   const fg=document.getElementById('filter-group-members').value;
   const q=(document.getElementById('member-search').value||'').toLowerCase();
-  const members=allMembers.filter(m=>(fg==='ALL'||m.ugroup===fg)&&m.name&&(!q||m.name.toLowerCase().includes(q)||m.ugroup.toLowerCase().includes(q)));
+  let members=allMembers.filter(m=>(fg==='ALL'||m.ugroup===fg)&&m.name&&(!q||m.name.toLowerCase().includes(q)||m.ugroup.toLowerCase().includes(q)));
+  if(memberNewFilter)members=members.filter(isNewThisWeek);
   const div=document.getElementById('members-table');
   if(!members.length){div.innerHTML='<p class="empty">No members found.</p>';return;}
   div.innerHTML=`<table>
     <thead><tr><th>uGroup</th><th>Name</th><th>Role</th><th>Status</th><th>Tenure</th><th>Gender</th><th>Age</th><th>Baptised</th><th>Homerun</th><th>USM</th><th></th></tr></thead>
     <tbody>${members.map(m=>`<tr>
-      <td>${m.ugroup}</td><td><strong>${m.name}</strong></td><td>${m.role||'—'}</td>
+      <td>${m.ugroup}</td><td><strong>${m.name}</strong>${isNewThisWeek(m)?` <span class="badge" style="background:var(--green-muted);color:var(--green);font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;vertical-align:middle;">🆕 New</span>`:''}</td><td>${m.role||'—'}</td>
       <td>${statusBadge(m.memberStatus)}</td>
       <td style="white-space:nowrap;font-size:11px;color:var(--text-secondary);">${tenure(m.joinDate)||'—'}</td>
       <td>${m.gender||'—'}</td><td>${m.age||'—'}</td>
@@ -1464,7 +1524,7 @@ function renderMembersView(){
         <button class="btn btn-ghost btn-sm" onclick="editMember(${allMembers.indexOf(m)})">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="delMember(${allMembers.indexOf(m)})">Del</button>
       </td></tr>`).join('')}</tbody></table>
-    <div class="table-footer">${members.length} member${members.length!==1?'s':''}</div>`;
+    <div class="table-footer">${members.length} member${members.length!==1?'s':''}${memberNewFilter?' · new this week':''}</div>`;
 }
 
 // Attendance view — week filter state
@@ -2235,6 +2295,22 @@ function closeSidebar(){
   document.querySelector('.sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('active');
 }
+
+// ════════ THEME TOGGLE ════════
+function applyThemeIcon(){
+  const btn=document.getElementById('theme-toggle-btn');
+  if(!btn)return;
+  const isLight=document.documentElement.getAttribute('data-theme')==='light';
+  btn.textContent=isLight?'☀️':'🌙';
+}
+function toggleTheme(){
+  const isLight=document.documentElement.getAttribute('data-theme')==='light';
+  const next=isLight?'dark':'light';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem('ug-theme',next);}catch(e){}
+  applyThemeIcon();
+}
+applyThemeIcon();
 // Close sidebar when a nav item is clicked on mobile
 document.querySelectorAll('.nav-item,.ug-item').forEach(el=>{
   el.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();});
