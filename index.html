@@ -11,28 +11,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* ── Prevent flash ── */
-html{background:#0F0D0B;}
+html{background:#0B0F19;}
 
 :root{
-  --surface:        #0F0D0B;
-  --surface-raised: #181511;
-  --surface-subtle: #201D19;
-  --surface-hover:  #272320;
-  --surface-overlay:#232019;
-  --sidebar:        #141210;
-  --border:         #2A2520;
-  --border-subtle:  #1E1B17;
-  --text-primary:   #F0EBE3;
-  --text-secondary: #857F78;
-  --text-muted:     #4A4540;
-  --accent:         #7C5CFC;
-  --accent-muted:   rgba(124,92,252,.12);
-  --green:          #34A866;
-  --green-muted:    rgba(52,168,102,.12);
-  --red:            #E05252;
-  --red-muted:      rgba(224,82,82,.12);
-  --gold:           #E8A020;
-  --gold-muted:     rgba(232,160,32,.12);
+  --surface:        #0B0F19;
+  --surface-raised: #111827;
+  --surface-subtle: #161D2E;
+  --surface-hover:  #1C2438;
+  --surface-overlay:#1A2133;
+  --sidebar:        #0D1220;
+  --border:         #232B3D;
+  --border-subtle:  #1A2133;
+  --text-primary:   #F3F4F6;
+  --text-secondary: #8B92A5;
+  --text-muted:     #565E72;
+  --accent:         #8B5CF6;
+  --accent-muted:   rgba(139,92,246,.12);
+  --green:          #10B981;
+  --green-muted:    rgba(16,185,129,.12);
+  --red:            #EF4444;
+  --red-muted:      rgba(239,68,68,.12);
+  --gold:           #F59E0B;
+  --gold-muted:     rgba(245,158,11,.12);
   --pink:           #E75480;
   --blue:           #4A90D9;
   --radius:         10px;
@@ -347,6 +347,39 @@ tbody tr:hover td{background:var(--surface-hover);}
   color:var(--text-muted);border-top:1px solid var(--border);
 }
 
+/* ── Command Centre ── */
+.cc-hero{display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-bottom:24px;}
+.cc-hero-card{
+  background:var(--surface-raised);border:1px solid var(--border);
+  border-radius:14px;padding:22px 24px;
+}
+.cc-score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
+.cc-score-big{font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1;}
+.cc-score-suffix{font-size:16px;color:var(--text-secondary);font-weight:600;}
+.cc-score-tag{display:inline-block;margin-top:10px;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;}
+.cc-mult-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cc-mult-num{font-size:28px;font-weight:700;}
+.cc-mult-lbl{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.cc-progress-track{height:10px;border-radius:6px;background:var(--surface-subtle);overflow:hidden;margin-top:10px;}
+.cc-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:6px;transition:width .4s;}
+
+.cc-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.cc-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border-subtle);}
+.cc-row:last-child{border-bottom:none;}
+
+.cc-priority-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+.cc-priority-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.cc-priority-label{font-size:12px;font-weight:700;margin-bottom:10px;}
+.cc-priority-item{font-size:12px;color:var(--text-primary);padding:6px 0;border-bottom:1px solid var(--border-subtle);}
+.cc-priority-item:last-child{border-bottom:none;}
+
+@media (max-width:900px){
+  .cc-hero{grid-template-columns:1fr;}
+  .cc-grid2{grid-template-columns:1fr;}
+  .cc-priority-grid{grid-template-columns:1fr 1fr;}
+}
+
 /* ── Modal ── */
 .modal-overlay{
   display:none;position:fixed;inset:0;
@@ -482,8 +515,11 @@ tbody tr:hover td{background:var(--surface-hover);}
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">Navigation</div>
-      <div class="nav-item active" onclick="showView('overview')">
-        <span class="nav-icon">▦</span> Overview
+      <div class="nav-item active" onclick="showView('command')">
+        <span class="nav-icon">🚀</span> Command Centre
+      </div>
+      <div class="nav-item" onclick="showView('overview')">
+        <span class="nav-icon">▦</span> Insights
       </div>
       <div class="nav-item" onclick="showView('members')">
         <span class="nav-icon">👥</span> Members
@@ -553,8 +589,55 @@ tbody tr:hover td{background:var(--surface-hover);}
         </div>
       </div>
 
+      <!-- VIEW: COMMAND CENTRE -->
+      <div id="view-command">
+        <div class="cc-hero">
+          <div class="cc-hero-card">
+            <div class="kpi-label">Area Health Score</div>
+            <div class="cc-score-row"><span class="cc-score-big" id="cc-area-score">—</span><span class="cc-score-suffix">/100</span></div>
+            <span class="cc-score-tag" id="cc-area-tag">—</span>
+          </div>
+          <div class="cc-hero-card">
+            <div class="kpi-label">Multiplication Progress</div>
+            <div class="cc-mult-row">
+              <div><div class="cc-mult-num" id="cc-mult-current">—</div><div class="cc-mult-lbl">Current uGroups</div></div>
+              <div style="text-align:center;"><div class="cc-mult-num" style="color:var(--text-muted);" id="cc-mult-gap">—</div><div class="cc-mult-lbl">Gap To Close</div></div>
+              <div style="text-align:right;"><div class="cc-mult-num" id="cc-mult-target">—</div><div class="cc-mult-lbl">Target uGroups</div></div>
+            </div>
+            <div class="cc-progress-track"><div class="cc-progress-fill" id="cc-mult-bar" style="width:0%;"></div></div>
+            <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;" id="cc-mult-sub">—</p>
+          </div>
+        </div>
+
+        <div class="cc-grid2">
+          <div class="chart-card">
+            <h4>🟢 Ready To Multiply</h4>
+            <div class="chart-sub">Groups at 75%+ multiplication readiness</div>
+            <div id="cc-ready-list"></div>
+          </div>
+          <div class="chart-card">
+            <h4>🛠 Leaders Needing Coaching</h4>
+            <div class="chart-sub">Auto-flagged: declining attendance, no assistant, no future leader, low health</div>
+            <div id="cc-coaching-list"></div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h3>This Week's Priorities</h3><p>Auto-generated focus areas for this week</p></div></div>
+        <div class="cc-priority-grid" id="cc-priorities"></div>
+
+        <div class="section-head"><div><h3>uGroup Readiness Ranking</h3><p>All groups ranked by multiplication readiness</p></div></div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>uGroup</th><th>Leader</th><th>Members</th><th>Assistant</th><th>Future Leader</th><th>Attendance</th><th>Health</th><th>Readiness</th><th>Status</th></tr></thead>
+              <tbody id="cc-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- VIEW: OVERVIEW -->
-      <div id="view-overview">
+      <div id="view-overview" style="display:none;">
         <!-- Filters -->
         <div class="toolbar">
           <select class="filter-select" id="filter-group" onchange="renderAll()">
@@ -628,13 +711,25 @@ tbody tr:hover td{background:var(--surface-hover);}
 
       <!-- VIEW: ATTENDANCE -->
       <div id="view-attendance" style="display:none;">
-        <div class="toolbar">
+        <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
           <select class="filter-select" id="filter-group-att" onchange="renderAttView()">
             <option value="ALL">All uGroups</option>
           </select>
-          <select class="filter-select" id="filter-date-att" onchange="renderAttView()">
+          <select class="filter-select" id="filter-date-att" onchange="clearWeekFilter();renderAttView()">
             <option value="ALL">All Dates</option>
           </select>
+          <button id="btn-this-week" onclick="setWeekFilter('this')"
+            style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);
+              background:var(--surface-subtle);color:var(--text-secondary);
+              font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">
+            📅 This Week
+          </button>
+          <button id="btn-last-week" onclick="setWeekFilter('last')"
+            style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);
+              background:var(--surface-subtle);color:var(--text-secondary);
+              font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">
+            ⏮ Last Week
+          </button>
         </div>
         <div class="table-card">
           <div class="table-wrap" id="att-table"></div>
@@ -824,8 +919,8 @@ const SUPA_URL = 'https://mtqhpfcyxhvefglcyirj.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10cWhwZmN5eGh2ZWZnbGN5aXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0OTE2MTEsImV4cCI6MjA5NjA2NzYxMX0.YTYUQfvBlEAGTo_x7oQXrLA-jlPALu8DY4Q0hlqLBz8';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-Chart.defaults.color='#857F78';
-Chart.defaults.borderColor='#2A2520';
+Chart.defaults.color='#8B92A5';
+Chart.defaults.borderColor='#232B3D';
 Chart.defaults.font.family="'Space Grotesk',sans-serif";
 Chart.defaults.font.size=11;
 
@@ -922,6 +1017,7 @@ async function loadData(){
   allAttendance=(ar.data||[]).map(dbToA);
   refreshLeaderDropdowns();
   refreshSidebar();populateFilters();updateTopbar();renderAll();
+  try{renderCommandCentre();}catch(e){console.error('command centre error',e);}
 }
 
 function refreshLeaderDropdowns(){
@@ -974,6 +1070,7 @@ async function clearAllData(){
   ]);
   allMembers=[];allAttendance=[];
   refreshSidebar();populateFilters();updateTopbar();renderAll();
+  try{renderCommandCentre();}catch(e){console.error('command centre error',e);}
 }
 
 // ════════ FILE IMPORT ════════
@@ -1078,12 +1175,12 @@ function tenure(joinDate){
 
 function statusBadge(s){
   const map={
-    'Visitor':     ['#E8A02022','#E8A020'],
+    'Visitor':     ['#F59E0B22','#F59E0B'],
     'Regular':     ['#4A90D922','#4A90D9'],
-    'Member':      ['#7C5CFC22','#7C5CFC'],
-    'Core Team':   ['#34A86622','#34A866'],
+    'Member':      ['#8B5CF622','#8B5CF6'],
+    'Core Team':   ['#10B98122','#10B981'],
   };
-  const [bg,color]= map[s]||['#2A252022','#857F78'];
+  const [bg,color]= map[s]||['#232B3D22','#8B92A5'];
   return`<span class="badge" style="background:${bg};color:${color};">${s||'—'}</span>`;
 }
 
@@ -1128,16 +1225,17 @@ async function loadSampleData(){
 }
 
 // ════════ NAVIGATION ════════
-let currentView='overview';
+let currentView='command';
 function showView(v){
   currentView=v;
-  ['overview','members','attendance','pipeline'].forEach(id=>{
+  ['command','overview','members','attendance','pipeline'].forEach(id=>{
     const el=document.getElementById('view-'+id);if(el)el.style.display=id===v?'block':'none';
   });
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.querySelector(`.nav-item[onclick*="${v}"]`)?.classList.add('active');
-  const titles={overview:'Overview',members:'Members',attendance:'Attendance',pipeline:'Leadership Pipeline'};
+  const titles={command:'Command Centre',overview:'Insights',members:'Members',attendance:'Attendance',pipeline:'Leadership Pipeline'};
   document.getElementById('topbar-title').textContent=titles[v]||v;
+  if(v==='command'){try{renderCommandCentre();}catch(e){console.error('command centre error',e);}}
   if(v==='members'){populateMemberFilters();renderMembersView();}
   if(v==='attendance'){populateAttFilters();renderAttView();}
   if(v==='pipeline'){try{renderPipeline();}catch(e){console.error('pipeline error',e);}}
@@ -1235,7 +1333,7 @@ function renderKPI(m,a){
 function renderTrendChart(att){
   const dates=[...new Set(att.map(a=>a.date).filter(Boolean))].sort();
   const groups=[...new Set(att.map(a=>a.ugroup).filter(Boolean))].sort();
-  const colors=['#7C5CFC','#34A866','#E8A020','#E75480','#4A90D9','#E05252','#8B5CF6'];
+  const colors=['#8B5CF6','#10B981','#F59E0B','#E75480','#4A90D9','#EF4444','#8B5CF6'];
   const datasets=groups.map((g,i)=>({
     label:g,
     data:dates.map(d=>att.filter(a=>a.ugroup===g&&a.date===d&&a.present.toLowerCase()==='yes').length),
@@ -1256,30 +1354,30 @@ function genderData(m){
   const other=m.length-male-female;
   const lbls=['Male','Female','Other'].filter((_,i)=>[male,female,other][i]>0);
   const data=[male,female,other].filter(v=>v>0);
-  return{type:'doughnut',data:{labels:lbls,datasets:[{data,backgroundColor:['#4A90D9','#E75480','#857F78'],borderWidth:0,hoverOffset:4}]},
+  return{type:'doughnut',data:{labels:lbls,datasets:[{data,backgroundColor:['#4A90D9','#E75480','#8B92A5'],borderWidth:0,hoverOffset:4}]},
     options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:12}}},cutout:'65%',maintainAspectRatio:true}};}
 function ageData(m){
   const cats=['Child','Youth','Young Adult','Adult','Senior'];
   return{type:'bar',data:{labels:cats,datasets:[{data:cats.map(c=>m.filter(x=>x.agecat===c).length),
-    backgroundColor:['#4A90D9','#7C5CFC','#34A866','#E8A020','#E05252'],borderRadius:5,borderWidth:0}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#2A2520'}},x:{grid:{display:false}}},maintainAspectRatio:true}};}
+    backgroundColor:['#4A90D9','#8B5CF6','#10B981','#F59E0B','#EF4444'],borderRadius:5,borderWidth:0}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#232B3D'}},x:{grid:{display:false}}},maintainAspectRatio:true}};}
 function baptismData(m){
   const yes=m.filter(x=>x.baptised.toLowerCase()==='yes').length;
-  return{type:'doughnut',data:{labels:['Baptised','Not Yet'],datasets:[{data:[yes,m.length-yes],backgroundColor:['#34A866','#E05252'],borderWidth:0,hoverOffset:4}]},
+  return{type:'doughnut',data:{labels:['Baptised','Not Yet'],datasets:[{data:[yes,m.length-yes],backgroundColor:['#10B981','#EF4444'],borderWidth:0,hoverOffset:4}]},
     options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:12}}},cutout:'65%',maintainAspectRatio:true}};}
 function homerumData(m){
   const keys=['hr1','hr2','hr3','hr4'];
   return{type:'bar',data:{labels:['HR 1','HR 2','HR 3','HR 4'],datasets:[{data:keys.map(k=>m.filter(x=>x[k].toLowerCase()==='yes').length),
-    backgroundColor:'#7C5CFC',borderRadius:5,borderWidth:0}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#2A2520'}},x:{grid:{display:false}}},maintainAspectRatio:true}};}
+    backgroundColor:'#8B5CF6',borderRadius:5,borderWidth:0}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#232B3D'}},x:{grid:{display:false}}},maintainAspectRatio:true}};}
 function usmData(m){
   const cats=['None','Year 1','Year 2','Completed'];
   return{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>m.filter(x=>(x.usm||'None')===c).length),
-    backgroundColor:['#2A2520','#4A90D9','#7C5CFC','#34A866'],borderWidth:0,hoverOffset:4}]},
+    backgroundColor:['#232B3D','#4A90D9','#8B5CF6','#10B981'],borderWidth:0,hoverOffset:4}]},
     options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:12}}},cutout:'65%',maintainAspectRatio:true}};}
 function statusData(m){
   const cats=['Visitor','Regular','Member','Core Team'];
-  const colors=['#E8A020','#4A90D9','#7C5CFC','#34A866'];
+  const colors=['#F59E0B','#4A90D9','#8B5CF6','#10B981'];
   const data=cats.map(c=>m.filter(x=>x.memberStatus===c).length);
   return{type:'doughnut',data:{labels:cats,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
     options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:10}}},cutout:'60%',maintainAspectRatio:true}};}
@@ -1303,16 +1401,16 @@ function tenureData(m){
     }).length;
   });
   return{type:'bar',data:{labels:buckets.map(b=>b.label),datasets:[{data:counts,
-    backgroundColor:['#E05252','#E8A020','#4A90D9','#7C5CFC','#34A866','#34A866cc'],
+    backgroundColor:['#EF4444','#F59E0B','#4A90D9','#8B5CF6','#10B981','#10B981cc'],
     borderRadius:5,borderWidth:0}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#2A2520'}},x:{grid:{display:false},ticks:{font:{size:10}}}},maintainAspectRatio:true}};}
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#232B3D'}},x:{grid:{display:false},ticks:{font:{size:10}}}},maintainAspectRatio:true}};}
 
 function attGroupData(a){
   const groups=[...new Set(a.map(x=>x.ugroup).filter(Boolean))].sort();
   return{type:'bar',data:{labels:groups,datasets:[
-    {label:'Present',data:groups.map(g=>a.filter(x=>x.ugroup===g&&x.present.toLowerCase()==='yes').length),backgroundColor:'#34A866',borderRadius:4,borderWidth:0},
-    {label:'Absent',data:groups.map(g=>a.filter(x=>x.ugroup===g&&x.present.toLowerCase()==='no').length),backgroundColor:'#E05252',borderRadius:4,borderWidth:0},
-  ]},options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#2A2520'}}},maintainAspectRatio:true}};}
+    {label:'Present',data:groups.map(g=>a.filter(x=>x.ugroup===g&&x.present.toLowerCase()==='yes').length),backgroundColor:'#10B981',borderRadius:4,borderWidth:0},
+    {label:'Absent',data:groups.map(g=>a.filter(x=>x.ugroup===g&&x.present.toLowerCase()==='no').length),backgroundColor:'#EF4444',borderRadius:4,borderWidth:0},
+  ]},options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#232B3D'}}},maintainAspectRatio:true}};}
 
 function rc(id,config){
   if(charts[id])charts[id].destroy();
@@ -1332,9 +1430,9 @@ function renderWednesday(){
   const wa=allAttendance.filter(a=>a.date===useDate&&(f.group==='ALL'||a.ugroup===f.group));
   const groups=[...new Set(allAttendance.map(a=>a.ugroup).filter(Boolean))].sort();
   rc('chart-wed',{type:'bar',data:{labels:groups,datasets:[
-    {label:'Present',data:groups.map(g=>wa.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='yes').length),backgroundColor:'#34A866',borderRadius:5,borderWidth:0},
-    {label:'Absent',data:groups.map(g=>wa.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='no').length),backgroundColor:'#E05252',borderRadius:5,borderWidth:0},
-  ]},options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#2A2520'}}},maintainAspectRatio:true}});
+    {label:'Present',data:groups.map(g=>wa.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='yes').length),backgroundColor:'#10B981',borderRadius:5,borderWidth:0},
+    {label:'Absent',data:groups.map(g=>wa.filter(a=>a.ugroup===g&&a.present.toLowerCase()==='no').length),backgroundColor:'#EF4444',borderRadius:5,borderWidth:0},
+  ]},options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#232B3D'}}},maintainAspectRatio:true}});
   const tp=wa.filter(a=>a.present.toLowerCase()==='yes').length;
   const ta=wa.length;
   const pct=ta?Math.round(tp/ta*100):0;
@@ -1369,18 +1467,67 @@ function renderMembersView(){
     <div class="table-footer">${members.length} member${members.length!==1?'s':''}</div>`;
 }
 
-// Attendance view
+// Attendance view — week filter state
+let attWeekFilter = null; // null | 'this' | 'last'
+
+function getWeekRange(which) {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun,1=Mon,...
+  // Week starts Monday
+  const diffToMon = (day === 0 ? -6 : 1 - day);
+  const mon = new Date(now); mon.setDate(now.getDate() + diffToMon); mon.setHours(0,0,0,0);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+  if (which === 'last') {
+    mon.setDate(mon.getDate() - 7);
+    sun.setDate(sun.getDate() - 7);
+  }
+  return { from: mon.toISOString().split('T')[0], to: sun.toISOString().split('T')[0] };
+}
+
+function setWeekFilter(which) {
+  attWeekFilter = which;
+  // Reset the date dropdown to ALL so it doesn't conflict
+  document.getElementById('filter-date-att').value = 'ALL';
+  // Highlight the active button
+  document.getElementById('btn-this-week').style.background = which==='this' ? 'var(--accent)' : 'var(--surface-subtle)';
+  document.getElementById('btn-this-week').style.color    = which==='this' ? '#fff' : 'var(--text-secondary)';
+  document.getElementById('btn-this-week').style.borderColor = which==='this' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-last-week').style.background = which==='last' ? 'var(--accent)' : 'var(--surface-subtle)';
+  document.getElementById('btn-last-week').style.color    = which==='last' ? '#fff' : 'var(--text-secondary)';
+  document.getElementById('btn-last-week').style.borderColor = which==='last' ? 'var(--accent)' : 'var(--border)';
+  renderAttView();
+}
+
+function clearWeekFilter() {
+  attWeekFilter = null;
+  document.getElementById('btn-this-week').style.background = 'var(--surface-subtle)';
+  document.getElementById('btn-this-week').style.color = 'var(--text-secondary)';
+  document.getElementById('btn-this-week').style.borderColor = 'var(--border)';
+  document.getElementById('btn-last-week').style.background = 'var(--surface-subtle)';
+  document.getElementById('btn-last-week').style.color = 'var(--text-secondary)';
+  document.getElementById('btn-last-week').style.borderColor = 'var(--border)';
+}
+
 function renderAttView(){
   const fg=document.getElementById('filter-group-att').value;
   const fd=document.getElementById('filter-date-att').value;
-  const att=allAttendance.filter(a=>(fg==='ALL'||a.ugroup===fg)&&(fd==='ALL'||a.date===fd)&&a.name);
+  let att=allAttendance.filter(a=>(fg==='ALL'||a.ugroup===fg)&&a.name);
+  if(attWeekFilter){
+    const {from,to}=getWeekRange(attWeekFilter);
+    att=att.filter(a=>a.date>=from&&a.date<=to);
+  } else if(fd!=='ALL'){
+    att=att.filter(a=>a.date===fd);
+  }
   const div=document.getElementById('att-table');
-  if(!att.length){div.innerHTML='<p class="empty">No attendance records.</p>';return;}
+  if(!att.length){div.innerHTML='<p class="empty">No attendance records found.</p>';return;}
   const shown=att.slice(0,300);
+  // Build label for footer
+  let rangeLabel='';
+  if(attWeekFilter){const r=getWeekRange(attWeekFilter);rangeLabel=` · ${r.from} → ${r.to}`;}
   div.innerHTML=`<table>
     <thead><tr><th>Date</th><th>uGroup</th><th>Member</th><th>Role</th><th>Present</th></tr></thead>
     <tbody>${shown.map(a=>`<tr><td>${a.date}</td><td>${a.ugroup}</td><td>${a.name}</td><td>${a.role||'—'}</td><td>${badge(a.present)}</td></tr>`).join('')}</tbody></table>
-    <div class="table-footer">${att.length>300?`Showing 300 of ${att.length} — use filters to narrow down`:`${att.length} records`}</div>`;
+    <div class="table-footer">${att.length>300?`Showing 300 of ${att.length}${rangeLabel} — use filters to narrow down`:`${att.length} record${att.length!==1?'s':''}${rangeLabel}`}</div>`;
 }
 
 function badge(v){const l=(v||'').toLowerCase();
@@ -1489,6 +1636,251 @@ function leaderScore(m){
   return{score,criteria};
 }
 
+// ════════════════════════════════════════════════════════
+// MULTIPLICATION READINESS ENGINE
+// Pure functions over allMembers / allAttendance — no schema
+// changes required. Group identity = m.ugroup (string).
+// ════════════════════════════════════════════════════════
+const MULTIPLICATION_TARGET = 14;
+
+function meGetGroups(){
+  return [...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort();
+}
+function meGroupMembers(g){
+  return allMembers.filter(m=>m.ugroup===g && m.name);
+}
+function meIsLeaderRole(role){
+  return /^(ugroup\s*)?leader$/i.test((role||'').trim());
+}
+function meIsAssistantRole(role){
+  return (role||'').toLowerCase().includes('assistant');
+}
+function meGroupLeaderName(g){
+  const mem=meGroupMembers(g);
+  const explicit=mem.find(m=>meIsLeaderRole(m.role));
+  if(explicit) return explicit.name;
+  const viaField=mem.find(m=>m.leader)?.leader;
+  if(viaField) return viaField;
+  return g.replace(/['']s uGroup.*/i,'').trim()||g;
+}
+function meGroupAssistant(g){
+  return meGroupMembers(g).find(m=>meIsAssistantRole(m.role))||null;
+}
+function meFutureLeadersOf(g){
+  const mem=meGroupMembers(g).filter(m=>!meIsLeaderRole(m.role)&&!meIsAssistantRole(m.role));
+  return mem.map(m=>({...m,...leaderScore(m)})).filter(m=>m.score>=60).sort((a,b)=>b.score-a.score);
+}
+function meGroupAttendanceByDate(g){
+  const recs=allAttendance.filter(a=>a.ugroup===g);
+  const dates=[...new Set(recs.map(a=>a.date))].sort();
+  return dates.map(d=>{
+    const day=recs.filter(a=>a.date===d);
+    const present=day.filter(a=>(a.present||'').toLowerCase()==='yes').length;
+    return{date:d,present,total:day.length,pct:day.length?Math.round(present/day.length*100):0};
+  });
+}
+function meAttendanceStability(g){
+  const weeks=meGroupAttendanceByDate(g).slice(-6);
+  if(!weeks.length) return{score:0,avgPct:0,trend:'flat',delta:0,weeks:[]};
+  const avg=weeks.reduce((s,w)=>s+w.pct,0)/weeks.length;
+  const recent=weeks.slice(-Math.min(3,weeks.length));
+  const prior=weeks.slice(0,weeks.length-recent.length);
+  const recentAvg=recent.reduce((s,w)=>s+w.pct,0)/recent.length;
+  const priorAvg=prior.length?prior.reduce((s,w)=>s+w.pct,0)/prior.length:recentAvg;
+  const delta=recentAvg-priorAvg;
+  const trend=delta>5?'up':delta<-5?'down':'flat';
+  const variance=weeks.reduce((s,w)=>s+Math.pow(w.pct-avg,2),0)/weeks.length;
+  const stdev=Math.sqrt(variance);
+  const score=Math.max(0,Math.min(100,Math.round(avg-stdev*0.5)));
+  return{score,avgPct:Math.round(avg),trend,delta:Math.round(delta),weeks};
+}
+function meLeadershipStrength(g){
+  const mem=meGroupMembers(g);
+  const leaderName=meGroupLeaderName(g);
+  const rec=mem.find(m=>m.name===leaderName)||mem.find(m=>meIsLeaderRole(m.role));
+  return rec?leaderScore(rec).score:50;
+}
+function meAssistantStrength(g){
+  const a=meGroupAssistant(g);
+  return a?leaderScore(a).score:0;
+}
+function meFutureLeaderStrength(g){
+  const fl=meFutureLeadersOf(g);
+  if(!fl.length) return 0;
+  const top=fl.slice(0,2);
+  return Math.round(top.reduce((s,m)=>s+m.score,0)/top.length);
+}
+function meVisitorActivity(g){
+  const mem=meGroupMembers(g);
+  if(!mem.length) return 0;
+  const visitors=mem.filter(m=>(m.memberStatus||'').toLowerCase()==='visitor');
+  return Math.min(100,Math.round(visitors.length/mem.length*300));
+}
+function meDiscipleshipProgress(g){
+  const mem=meGroupMembers(g);
+  if(!mem.length) return 0;
+  let total=0;
+  mem.forEach(m=>{
+    let pts=0;
+    if((m.hr1||'').toLowerCase()==='yes')pts+=10;
+    if((m.hr2||'').toLowerCase()==='yes')pts+=10;
+    if((m.hr3||'').toLowerCase()==='yes')pts+=10;
+    if((m.hr4||'').toLowerCase()==='yes')pts+=20;
+    if((m.usm||'').toLowerCase()!=='none'&&m.usm)pts+=20;
+    if((m.baptised||'').toLowerCase()==='yes')pts+=30;
+    total+=Math.min(100,pts);
+  });
+  return Math.round(total/mem.length);
+}
+function meBaptismRate(g){
+  const mem=meGroupMembers(g);
+  if(!mem.length) return 0;
+  return Math.round(mem.filter(m=>(m.baptised||'').toLowerCase()==='yes').length/mem.length*100);
+}
+// Multiplication Readiness % — "the most important feature"
+function meReadiness(g){
+  const leadership=meLeadershipStrength(g);
+  const assistant=meAssistantStrength(g);
+  const futureLeader=meFutureLeaderStrength(g);
+  const att=meAttendanceStability(g);
+  const visitor=meVisitorActivity(g);
+  const discipleship=meDiscipleshipProgress(g);
+  const pct=Math.round(leadership*0.25+assistant*0.20+futureLeader*0.20+att.score*0.20+visitor*0.05+discipleship*0.10);
+  let status,statusLabel;
+  if(pct>=75){status='ready';statusLabel='🟢 Ready To Multiply';}
+  else if(pct>=50){status='preparing';statusLabel='🟡 Preparing';}
+  else{status='needs-dev';statusLabel='🔴 Needs Development';}
+  return{leadership,assistant,futureLeader,attendanceScore:att.score,attendanceTrend:att.trend,visitor,discipleship,pct,status,statusLabel};
+}
+// uGroup Health Score — 30% attendance + 20% leadership pipeline + 20% visitor growth + 20% mult. readiness + 10% baptisms
+function meHealth(g){
+  const att=meAttendanceStability(g);
+  const readiness=meReadiness(g);
+  const leadershipPipeline=meFutureLeaderStrength(g);
+  const visitorGrowth=meVisitorActivity(g);
+  const baptismRate=meBaptismRate(g);
+  const healthScore=Math.round(att.score*0.30+leadershipPipeline*0.20+visitorGrowth*0.20+readiness.pct*0.20+baptismRate*0.10);
+  let tier;
+  if(healthScore>=80)tier='Strong';
+  else if(healthScore>=60)tier='Healthy';
+  else if(healthScore>=40)tier='At Risk';
+  else tier='Critical';
+  return{healthScore,tier,attendanceTrend:att.trend,components:{attendanceConsistency:att.score,leadershipPipeline,visitorGrowth,multiplicationReadiness:readiness.pct,baptismRate}};
+}
+function meAreaHealth(){
+  const groups=meGetGroups();
+  if(!groups.length) return{score:0,label:'No Data'};
+  const scores=groups.map(g=>meHealth(g).healthScore);
+  const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  let label;
+  if(avg>=80)label='Strong Area';
+  else if(avg>=60)label='Healthy Area';
+  else if(avg>=40)label='Developing Area';
+  else label='Critical Area';
+  return{score:avg,label};
+}
+function meLeadersNeedingCoaching(){
+  return meGetGroups().map(g=>{
+    const leader=meGroupLeaderName(g);
+    const assistant=meGroupAssistant(g);
+    const fl=meFutureLeadersOf(g);
+    const att=meAttendanceStability(g);
+    const health=meHealth(g);
+    const reasons=[];
+    if(att.trend==='down')reasons.push('Attendance declining');
+    if(!assistant)reasons.push('No assistant identified');
+    if(!fl.length)reasons.push('No future leader identified');
+    if(health.healthScore<40)reasons.push('Health critical');
+    return{group:g,leader,reasons,healthScore:health.healthScore};
+  }).filter(x=>x.reasons.length>0).sort((a,b)=>a.healthScore-b.healthScore);
+}
+function meTopFutureLeadersArea(n){
+  const all=[];
+  meGetGroups().forEach(g=>{meFutureLeadersOf(g).forEach(m=>all.push({...m,group:g}));});
+  return all.sort((a,b)=>b.score-a.score).slice(0,n||5);
+}
+function meWeeklyPriorities(){
+  const groups=meGetGroups();
+  const healthList=groups.map(g=>({group:g,leader:meGroupLeaderName(g),...meHealth(g)})).sort((a,b)=>b.healthScore-a.healthScore);
+  const celebrate=healthList.slice(0,2);
+  const coach=meLeadersNeedingCoaching().slice(0,2);
+  const develop=meTopFutureLeadersArea(2);
+  const readyGroups=groups.map(g=>({group:g,leader:meGroupLeaderName(g),...meReadiness(g)})).filter(x=>x.status==='ready').sort((a,b)=>b.pct-a.pct);
+  const launch=readyGroups.slice(0,1);
+  return{celebrate,coach,develop,launch};
+}
+
+function renderCommandCentre(){
+  const groups=meGetGroups();
+  const current=groups.length;
+  const target=MULTIPLICATION_TARGET;
+  const gap=Math.max(0,target-current);
+  const progressPct=Math.min(100,Math.round(current/target*100));
+  const area=meAreaHealth();
+
+  const tagColor=area.score>=80?'green':area.score>=60?'green':area.score>=40?'gold':'red';
+  document.getElementById('cc-area-score').textContent=groups.length?area.score:'—';
+  document.getElementById('cc-area-tag').textContent=groups.length?area.label:'No data yet';
+  document.getElementById('cc-area-tag').style.background=`var(--${tagColor}-muted)`;
+  document.getElementById('cc-area-tag').style.color=`var(--${tagColor})`;
+
+  document.getElementById('cc-mult-current').textContent=current;
+  document.getElementById('cc-mult-target').textContent=target;
+  document.getElementById('cc-mult-gap').textContent=gap;
+  document.getElementById('cc-mult-bar').style.width=progressPct+'%';
+  document.getElementById('cc-mult-sub').textContent=gap>0
+    ? `${gap} more uGroup${gap>1?'s':''} needed to hit the target.`
+    : `Target reached — set a new multiplication goal.`;
+
+  const readiness=groups.map(g=>({group:g,leader:meGroupLeaderName(g),...meReadiness(g)})).sort((a,b)=>b.pct-a.pct);
+  const ready=readiness.filter(r=>r.status==='ready');
+  document.getElementById('cc-ready-list').innerHTML=ready.length?ready.map(r=>`
+    <div class="cc-row">
+      <div><strong>${r.group}</strong><div style="font-size:11px;color:var(--text-secondary);">${r.leader}</div></div>
+      <div style="color:var(--green);font-weight:700;">${r.pct}%</div>
+    </div>`).join(''):`<p class="empty" style="padding:16px 0;">No groups currently above 75% readiness.</p>`;
+
+  const coaching=meLeadersNeedingCoaching();
+  document.getElementById('cc-coaching-list').innerHTML=coaching.length?coaching.map(c=>`
+    <div class="cc-row">
+      <div><strong>${c.leader}</strong><div style="font-size:11px;color:var(--text-secondary);">${c.group}</div></div>
+      <div style="font-size:10px;color:var(--red);text-align:right;max-width:160px;">${c.reasons.join(' · ')}</div>
+    </div>`).join(''):`<p class="empty" style="padding:16px 0;">No groups currently flagged.</p>`;
+
+  const p=meWeeklyPriorities();
+  document.getElementById('cc-priorities').innerHTML=`
+    <div class="cc-priority-card"><div class="cc-priority-label" style="color:var(--green);">🎉 Celebrate</div>${
+      p.celebrate.length?p.celebrate.map(x=>`<div class="cc-priority-item">${x.leader} — ${x.group} <span style="color:var(--text-muted);">(${x.healthScore})</span></div>`).join(''):'<div class="cc-priority-item">—</div>'}</div>
+    <div class="cc-priority-card"><div class="cc-priority-label" style="color:var(--red);">🛠 Coach</div>${
+      p.coach.length?p.coach.map(x=>`<div class="cc-priority-item">${x.leader} — ${x.group}</div>`).join(''):'<div class="cc-priority-item">—</div>'}</div>
+    <div class="cc-priority-card"><div class="cc-priority-label" style="color:var(--accent);">🌱 Develop</div>${
+      p.develop.length?p.develop.map(x=>`<div class="cc-priority-item">${x.name} — ${x.group} <span style="color:var(--text-muted);">(${x.score})</span></div>`).join(''):'<div class="cc-priority-item">—</div>'}</div>
+    <div class="cc-priority-card"><div class="cc-priority-label" style="color:var(--gold);">🚀 Launch</div>${
+      p.launch.length?p.launch.map(x=>`<div class="cc-priority-item">${x.leader} — ${x.group} <span style="color:var(--text-muted);">(${x.pct}%)</span></div>`).join(''):'<div class="cc-priority-item">No group ready yet</div>'}</div>
+  `;
+
+  document.getElementById('cc-table-body').innerHTML = groups.length ? readiness.map(r=>{
+    const mem=meGroupMembers(r.group);
+    const assistant=meGroupAssistant(r.group);
+    const fl=meFutureLeadersOf(r.group);
+    const trendIcon=r.attendanceTrend==='up'?'↑':r.attendanceTrend==='down'?'↓':'→';
+    const trendColor=r.attendanceTrend==='up'?'var(--green)':r.attendanceTrend==='down'?'var(--red)':'var(--text-muted)';
+    const statusColor=r.status==='ready'?'var(--green)':r.status==='preparing'?'var(--gold)':'var(--red)';
+    const health=meHealth(r.group);
+    return `<tr>
+      <td><strong>${r.group}</strong></td>
+      <td>${r.leader}</td>
+      <td>${mem.length}</td>
+      <td>${assistant?assistant.name:'<span style="color:var(--text-muted);">—</span>'}</td>
+      <td>${fl.length?fl[0].name:'<span style="color:var(--text-muted);">—</span>'}</td>
+      <td><span style="color:${trendColor};">${trendIcon} ${r.attendanceScore}%</span></td>
+      <td>${health.healthScore}</td>
+      <td><strong style="color:${statusColor};">${r.pct}%</strong></td>
+      <td><span style="color:${statusColor};font-size:11px;font-weight:600;">${r.statusLabel}</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9" class="empty">No uGroups yet.</td></tr>`;
+}
+
 function renderPipeline(){
   const div=document.getElementById('pipeline-content');
   const groups=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort();
@@ -1543,7 +1935,7 @@ let splitState = {
 };
 
 const LEADER_COLORS = [
-  '#8B5CF6','#C9A84C','#4ECBA0','#E05B5B','#4A90D9','#E75480','#34A866'
+  '#8B5CF6','#C9A84C','#4ECBA0','#E05B5B','#4A90D9','#E75480','#10B981'
 ];
 
 function openSplitModal(groupName) {
