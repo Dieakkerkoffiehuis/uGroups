@@ -763,7 +763,7 @@ tbody tr:hover td{background:var(--surface-hover);}
         <div class="table-card">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>uGroup</th><th>Leader</th><th>Members</th><th>Assistant</th><th>Future Leader</th><th>Attendance</th><th>Health</th><th>Readiness</th><th>Status</th></tr></thead>
+              <thead><tr><th>uGroup</th><th>Leader</th><th>Members</th><th>Assistant</th><th>Future Leader</th><th>Attendance</th><th>Health</th><th>Readiness</th><th>Status</th><th></th></tr></thead>
               <tbody id="cc-table-body"></tbody>
             </table>
           </div>
@@ -964,6 +964,26 @@ tbody tr:hover td{background:var(--surface-hover);}
   </div>
 </div>
 
+<!-- ══ Transfer Out uGroup Modal (Area Shuffle) ══ -->
+<div class="modal-overlay" id="transfer-modal">
+  <div class="modal" style="max-width:460px;">
+    <button class="close-btn" onclick="closeTransferModal()">✕</button>
+    <h2>Transfer uGroup Out</h2>
+    <p style="font-size:12.5px;color:var(--text-secondary);margin-top:-4px;margin-bottom:14px;">
+      Use this when a uGroup is moving to a different Area Leader (annual area shuffle). This downloads a handoff file with the group's full history, then archives it out of your active dashboard. Nothing is permanently deleted — you can restore it from Settings if needed.
+    </p>
+    <div style="background:var(--surface-subtle);border:1px solid var(--border);border-radius:9px;padding:12px;margin-bottom:14px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text-primary);" id="tm-group-name">—</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;" id="tm-group-meta">—</div>
+    </div>
+    <div class="msg-error" id="tm-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeTransferModal()">Cancel</button>
+      <button class="btn btn-primary" id="tm-confirm-btn" onclick="confirmTransferOut()">⇄ Download Handoff File &amp; Archive</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Mark Weekly Attendance Modal ══ -->
 <div class="modal-overlay" id="attendance-modal">
   <div class="modal" style="max-width:540px;">
@@ -1116,7 +1136,7 @@ tbody tr:hover td{background:var(--surface-hover);}
 
 <!-- ══ Settings Modal ══ --><!-- ══ Settings Modal ══ -->
 <div class="modal-overlay" id="settings-modal">
-  <div class="modal" style="max-width:380px;">
+  <div class="modal" style="max-width:420px;">
     <button class="close-btn" onclick="closeSettings()">✕</button>
     <h2>Settings</h2>
     <div class="settings-field"><label>New Password</label>
@@ -1128,6 +1148,9 @@ tbody tr:hover td{background:var(--surface-hover);}
       <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
       <button class="btn btn-primary" onclick="saveSettings()">Update Password</button>
     </div>
+    <div style="border-top:1px solid var(--border);margin:18px 0 12px;"></div>
+    <div style="font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Archived uGroups (Area Shuffle)</div>
+    <div id="archived-groups-list" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -1172,7 +1195,44 @@ function showApp(user){
 function openSettings(){
   document.getElementById('s-pass').value='';document.getElementById('s-pass2').value='';
   document.getElementById('s-msg').textContent='';
+  try{renderArchivedGroupsPanel();}catch(e){console.error('archived groups panel error',e);}
   document.getElementById('settings-modal').classList.add('open');
+}
+function renderArchivedGroupsPanel(){
+  const el=document.getElementById('archived-groups-list');
+  const groups=meGetArchivedGroups();
+  if(!groups.length){el.innerHTML='<p class="empty" style="font-size:11.5px;padding:6px 0;">No archived uGroups. Transferred-out uGroups will appear here.</p>';return;}
+  el.innerHTML=groups.map(g=>{
+    const mem=allMembers.filter(m=>m.ugroup===g&&m.archived);
+    const leader=mem.find(m=>meIsLeaderRole(m.role))?.name||mem[0]?.leader||g;
+    return `<div class="am-row">
+      <span class="am-name">${g}<span class="am-role">${leader} · ${mem.length} member${mem.length!==1?'s':''}</span></span>
+      <div class="am-toggle">
+        <button type="button" class="am-btn" onclick="restoreArchivedGroup('${g.replace(/'/g,"\\'")}')" title="Bring this uGroup back into your active dashboard">↩ Restore</button>
+        <button type="button" class="am-btn" style="color:var(--red);" onclick="deleteArchivedGroup('${g.replace(/'/g,"\\'")}')" title="Permanently delete this uGroup's members and attendance">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function restoreArchivedGroup(g){
+  if(!confirm(`Restore "${g}" to your active dashboard?`))return;
+  const{error}=await sb.from('members').update({archived:false}).eq('ugroup_name',g);
+  if(error){alert('Restore failed: '+error.message);return;}
+  await loadData();
+  renderArchivedGroupsPanel();
+  renderAll();try{renderCommandCentre();}catch(e){}
+  alert(`✓ "${g}" restored.`);
+}
+async function deleteArchivedGroup(g){
+  if(!confirm(`Permanently delete all members and attendance history for "${g}"? This cannot be undone — make sure you already downloaded its handoff file.`))return;
+  await Promise.all([
+    sb.from('members').delete().eq('ugroup_name',g),
+    sb.from('attendance').delete().eq('ugroup_name',g),
+  ]);
+  await loadData();
+  renderArchivedGroupsPanel();
+  renderAll();try{renderCommandCentre();}catch(e){}
+  alert(`✓ "${g}" permanently deleted.`);
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
 async function saveSettings(){
@@ -1206,6 +1266,7 @@ function mToDb(m){return{
   hr1:m.hr1||'No',hr2:m.hr2||'No',hr3:m.hr3||'No',hr4:m.hr4||'No',
   usm_status:m.usm||'None',join_date:safeDate(m.joinDate),member_status:m.memberStatus||'',notes:m.notes||'',
   attends_church:m.attendsChurch||'No',attends_prayer:m.attendsPrayer||'No',holy_spirit:m.holySpirit||'No',
+  archived:!!m.archived,
 };}
 function dbToM(r){return{
   id:r.id,ugroup:r.ugroup_name,leader:r.leader,name:r.name,role:r.role,gender:r.gender,
@@ -1213,6 +1274,7 @@ function dbToM(r){return{
   hr1:r.hr1,hr2:r.hr2,hr3:r.hr3,hr4:r.hr4,
   usm:r.usm_status,joinDate:r.join_date||'',memberStatus:r.member_status,notes:r.notes,
   attendsChurch:r.attends_church||'No',attendsPrayer:r.attends_prayer||'No',holySpirit:r.holy_spirit||'No',
+  archived:!!r.archived,
 };}
 function aToDb(a){return{
   att_date:a.date,ugroup_name:a.ugroup,leader:a.leader||'',
@@ -1460,8 +1522,8 @@ function showView(v){
 }
 
 function refreshSidebar(){
-  const groups=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort();
-  document.getElementById('nav-member-count').textContent=allMembers.length;
+  const groups=meGetGroups();
+  document.getElementById('nav-member-count').textContent=allMembers.filter(m=>!m.archived).length;
   const el=document.getElementById('sidebar-ugroups');
   if(!groups.length){el.innerHTML='<div style="font-size:11px;color:var(--text-muted);padding:4px 10px;">No uGroups yet</div>';return;}
   el.innerHTML=groups.map(g=>{
@@ -1482,18 +1544,18 @@ function filterToGroup(g){
 }
 
 function updateTopbar(){
-  const groups=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].length;
-  document.getElementById('topbar-sub').textContent=`${groups} uGroups · ${allMembers.length} members`;
+  const groups=meGetGroups().length;
+  document.getElementById('topbar-sub').textContent=`${groups} uGroups · ${allMembers.filter(m=>!m.archived).length} members`;
 }
 
 function populateFilters(){
-  const groups=['ALL',...[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort()];
+  const groups=['ALL',...meGetGroups()];
   const dates=['ALL',...[...new Set(allAttendance.map(a=>a.date).filter(Boolean))].sort().reverse()];
   ['filter-group'].forEach(id=>{document.getElementById(id).innerHTML=groups.map(g=>`<option value="${g}">${g==='ALL'?'All uGroups':g}</option>`).join('');});
   ['filter-date'].forEach(id=>{document.getElementById(id).innerHTML=dates.map(d=>`<option value="${d}">${d==='ALL'?'All Dates':d}</option>`).join('');});
 }
 function populateMemberFilters(){
-  const groups=['ALL',...[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort()];
+  const groups=['ALL',...meGetGroups()];
   document.getElementById('filter-group-members').innerHTML=groups.map(g=>`<option value="${g}">${g==='ALL'?'All uGroups':g}</option>`).join('');
 }
 function populateAiFilters(){
@@ -2124,6 +2186,47 @@ async function saveAttendanceModal(){
   alert(`✓ Attendance saved for ${records.length} member${records.length!==1?'s':''} on ${date}.`);
 }
 
+// ════════ TRANSFER OUT MODAL (Area Shuffle) ════════
+let tmTargetGroup=null;
+function openTransferModal(g){
+  tmTargetGroup=g;
+  const mem=meGroupMembers(g);
+  const leader=meGroupLeaderName(g);
+  document.getElementById('tm-group-name').textContent=g;
+  document.getElementById('tm-group-meta').textContent=`Leader: ${leader} · ${mem.length} member${mem.length!==1?'s':''}`;
+  document.getElementById('tm-err').textContent='';
+  document.getElementById('transfer-modal').classList.add('open');
+}
+function closeTransferModal(){document.getElementById('transfer-modal').classList.remove('open');tmTargetGroup=null;}
+document.getElementById('transfer-modal').addEventListener('click',function(e){if(e.target===this)closeTransferModal();});
+async function confirmTransferOut(){
+  const g=tmTargetGroup;
+  const err=document.getElementById('tm-err');
+  err.textContent='';
+  if(!g){err.textContent='No uGroup selected.';return;}
+  const members=meGroupMembers(g);
+  if(!members.length){err.textContent='This uGroup has no members to transfer.';return;}
+  const attendance=allAttendance.filter(a=>a.ugroup===g);
+
+  // Download the handoff package first, so Zaviér always has the file even if the save fails.
+  const pkg={members,attendance,ugroup:g,transferredOut:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(pkg,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  const safeName=g.replace(/[^a-z0-9]+/gi,'_');
+  a.download=`${safeName}_Handoff_${new Date().toLocaleDateString('en-ZA').replace(/\//g,'-')}.json`;
+  a.click();URL.revokeObjectURL(a.href);
+
+  const btn=document.getElementById('tm-confirm-btn');
+  btn.disabled=true;btn.textContent='Archiving…';
+  const{error}=await sb.from('members').update({archived:true}).eq('ugroup_name',g);
+  btn.disabled=false;btn.textContent='⇄ Download Handoff File & Archive';
+  if(error){err.textContent='Archive failed: '+error.message+' (Have you run the "archived" column migration in Supabase yet?');return;}
+  await loadData();
+  closeTransferModal();
+  renderAll();try{renderCommandCentre();}catch(e){}
+  alert(`✓ "${g}" handed off and archived. The handoff file is in your Downloads — send it to the new Area Leader. You can restore this uGroup anytime from Settings → Archived uGroups.`);
+}
+
 // ════════ UGROUP MODAL ════════
 function openUGroupModal(){
   ['ug-name','ug-asst'].forEach(id=>document.getElementById(id).value='');
@@ -2152,7 +2255,7 @@ async function saveUGroup(){
 function openMemberModal(idx=-1){
   document.getElementById('edit-idx').value=idx;
   document.getElementById('member-modal-title').textContent=idx>=0?'Edit Member':'Add Member';
-  document.getElementById('ugroup-dl').innerHTML=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].map(g=>`<option value="${g}">`).join('');
+  document.getElementById('ugroup-dl').innerHTML=meGetGroups().map(g=>`<option value="${g}">`).join('');
   if(idx>=0){
     const m=allMembers[idx];
     document.getElementById('f-ugroup').value=m.ugroup;
@@ -2233,7 +2336,12 @@ function leaderScore(m){
 const MULTIPLICATION_TARGET = 14;
 
 function meGetGroups(){
-  return [...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort();
+  return [...new Set(allMembers.filter(m=>!m.archived).map(m=>m.ugroup).filter(Boolean))].sort();
+}
+function meGetArchivedGroups(){
+  const archivedUgroups=new Set(allMembers.filter(m=>m.archived).map(m=>m.ugroup));
+  const activeUgroups=new Set(allMembers.filter(m=>!m.archived).map(m=>m.ugroup));
+  return [...archivedUgroups].filter(g=>!activeUgroups.has(g)).sort();
 }
 function meGroupMembers(g){
   return allMembers.filter(m=>m.ugroup===g && m.name);
@@ -2467,13 +2575,14 @@ function renderCommandCentre(){
       <td>${health.healthScore}</td>
       <td><strong style="color:${statusColor};">${r.pct}%</strong></td>
       <td><span style="color:${statusColor};font-size:11px;font-weight:600;">${r.statusLabel}</span></td>
+      <td><button class="btn btn-ghost btn-sm" style="font-size:10.5px;padding:4px 9px;white-space:nowrap;" onclick="openTransferModal('${r.group.replace(/'/g,"\\'")}')" title="Transfer this uGroup to a new Area Leader">⇄ Transfer Out</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="9" class="empty">No uGroups yet.</td></tr>`;
+  }).join('') : `<tr><td colspan="10" class="empty">No uGroups yet.</td></tr>`;
 }
 
 function renderPipeline(){
   const div=document.getElementById('pipeline-content');
-  const groups=[...new Set(allMembers.map(m=>m.ugroup).filter(Boolean))].sort();
+  const groups=meGetGroups();
   if(!groups.length){div.innerHTML='<p class="empty">No members yet.</p>';return;}
 
   div.innerHTML=groups.map(g=>{
