@@ -1001,6 +1001,14 @@ tbody tr:hover td{background:var(--surface-hover);}
         <input id="am-date" type="date" onchange="renderAttendanceModalList()"/>
       </div>
     </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAddGuestRow()" id="am-guest-toggle-btn">+ Add Guest (First Time)</button>
+    </div>
+    <div id="am-guest-row" style="display:none;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <input id="am-guest-first" placeholder="Name" style="flex:1;min-width:120px;padding:9px 12px;background:var(--surface-subtle);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:13px;"/>
+      <input id="am-guest-last" placeholder="Surname" style="flex:1;min-width:120px;padding:9px 12px;background:var(--surface-subtle);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:13px;"/>
+      <button type="button" class="btn btn-primary btn-sm" onclick="addGuestToAttendance()">+ Add</button>
+    </div>
     <div id="am-list" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;"></div>
     <div class="msg-error" id="am-err"></div>
     <div class="form-actions">
@@ -2129,6 +2137,9 @@ function openAttendanceModal(){
   sel.value=groups.includes(preset)?preset:'';
   document.getElementById('am-date').value=getThisWednesday();
   document.getElementById('am-err').textContent='';
+  document.getElementById('am-guest-row').style.display='none';
+  document.getElementById('am-guest-first').value='';
+  document.getElementById('am-guest-last').value='';
   renderAttendanceModalList();
   document.getElementById('attendance-modal').classList.add('open');
 }
@@ -2157,6 +2168,33 @@ function setAmPresent(btn,val){
   const row=btn.closest('.am-row');
   row.querySelectorAll('.am-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+}
+function toggleAddGuestRow(){
+  const row=document.getElementById('am-guest-row');
+  const open=row.style.display==='flex';
+  row.style.display=open?'none':'flex';
+  if(!open)document.getElementById('am-guest-first').focus();
+}
+async function addGuestToAttendance(){
+  const g=document.getElementById('am-group').value;
+  const err=document.getElementById('am-err');
+  err.textContent='';
+  if(!g){err.textContent='Select a uGroup before adding a guest.';return;}
+  const first=document.getElementById('am-guest-first').value.trim();
+  const last=document.getElementById('am-guest-last').value.trim();
+  const name=[first,last].filter(Boolean).join(' ');
+  if(!name){err.textContent='Enter the guest\'s name.';return;}
+  const date=document.getElementById('am-date').value||getThisWednesday();
+  const leader=meGroupLeaderName(g);
+  const m={ugroup:g,leader,name,role:'',gender:'',dob:'',age:null,agecat:'',baptised:'No',
+    hr1:'No',hr2:'No',hr3:'No',hr4:'No',usm:'None',joinDate:date,memberStatus:'Visitor',
+    notes:'First-time guest — added via Mark Attendance.',attendsChurch:'No',attendsPrayer:'No',holySpirit:'No'};
+  await sb.from('members').insert([mToDb(m)]);
+  document.getElementById('am-guest-first').value='';
+  document.getElementById('am-guest-last').value='';
+  document.getElementById('am-guest-row').style.display='none';
+  await loadData();
+  renderAttendanceModalList();
 }
 async function saveAttendanceModal(){
   const g=document.getElementById('am-group').value;
