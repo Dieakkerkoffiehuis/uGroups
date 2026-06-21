@@ -536,6 +536,23 @@ tbody tr:hover td{background:var(--surface-hover);}
 .form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
 .msg-error{font-size:12px;color:var(--red);margin-top:6px;}
 
+/* Mark Attendance modal */
+.am-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 12px;background:var(--surface-subtle);border:1px solid var(--border);
+  border-radius:9px;
+}
+.am-name{font-size:13px;font-weight:600;color:var(--text-primary);}
+.am-role{display:block;font-size:10.5px;font-weight:500;color:var(--text-muted);margin-top:1px;}
+.am-toggle{display:flex;gap:6px;flex-shrink:0;}
+.am-btn{
+  padding:6px 13px;border-radius:7px;border:1px solid var(--border);
+  background:var(--surface-raised);color:var(--text-secondary);
+  font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s;
+}
+.am-btn.am-yes.active{background:var(--green-muted);color:var(--green);border-color:var(--green);}
+.am-btn.am-no.active{background:var(--red-muted);color:var(--red);border-color:var(--red);}
+
 /* Settings */
 .settings-field{margin-bottom:14px;}
 .settings-field label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:5px;}
@@ -679,6 +696,7 @@ tbody tr:hover td{background:var(--surface-hover);}
       </div>
       <div class="topbar-right">
         <button class="btn btn-ghost" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button>
+        <button class="btn btn-success" onclick="openAttendanceModal()">✓ Mark Attendance</button>
         <button class="btn btn-purple" onclick="openUGroupModal()">+ uGroup</button>
         <button class="btn btn-primary" onclick="openMemberModal()">+ Member</button>
       </div>
@@ -846,6 +864,7 @@ tbody tr:hover td{background:var(--surface-hover);}
           <h3 style="font-size:15px;font-weight:700;">Attendance Heatmap</h3>
         </div>
         <div class="ai-toolbar">
+          <button class="btn btn-success btn-sm" onclick="openAttendanceModal()">✓ Mark This Week's Attendance</button>
           <select class="filter-select" id="ai-filter-group" onchange="renderAttView()">
             <option value="ALL">All uGroups</option>
           </select>
@@ -941,6 +960,32 @@ tbody tr:hover td{background:var(--surface-hover);}
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeUGroupModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveUGroup()">Create uGroup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Mark Weekly Attendance Modal ══ -->
+<div class="modal-overlay" id="attendance-modal">
+  <div class="modal" style="max-width:540px;">
+    <button class="close-btn" onclick="closeAttendanceModal()">✕</button>
+    <h2>Mark Attendance</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+      <div class="field" style="flex:1;min-width:180px;">
+        <label>uGroup *</label>
+        <select id="am-group" onchange="renderAttendanceModalList()">
+          <option value="">Select uGroup…</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1;min-width:140px;">
+        <label>Date (Wednesday) *</label>
+        <input id="am-date" type="date" onchange="renderAttendanceModalList()"/>
+      </div>
+    </div>
+    <div id="am-list" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;"></div>
+    <div class="msg-error" id="am-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeAttendanceModal()">Cancel</button>
+      <button class="btn btn-primary" id="am-save-btn" onclick="saveAttendanceModal()">✓ Save Attendance</button>
     </div>
   </div>
 </div>
@@ -2002,6 +2047,82 @@ function badge(v){const l=(v||'').toLowerCase();
   if(l==='yes')return`<span class="badge badge-yes">Yes</span>`;
   if(l==='no')return`<span class="badge badge-no">No</span>`;
   return`<span class="badge badge-none">—</span>`;}
+
+// ════════ MARK ATTENDANCE MODAL ════════
+function getThisWednesday(){
+  const now=new Date();
+  const day=now.getDay(); // 0=Sun..6=Sat
+  const diffToMon=(day===0?-6:1-day);
+  const mon=new Date(now); mon.setDate(now.getDate()+diffToMon); mon.setHours(0,0,0,0);
+  const wed=new Date(mon); wed.setDate(mon.getDate()+2);
+  return wed.toISOString().split('T')[0];
+}
+function openAttendanceModal(){
+  const sel=document.getElementById('am-group');
+  const groups=meGetGroups();
+  if(!groups.length){alert('Add a uGroup with members first.');return;}
+  sel.innerHTML='<option value="">Select uGroup…</option>'+groups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}">${g}</option>`).join('');
+  const filterEl=document.getElementById('ai-filter-group');
+  const preset=(filterEl&&filterEl.value!=='ALL')?filterEl.value:'';
+  sel.value=groups.includes(preset)?preset:'';
+  document.getElementById('am-date').value=getThisWednesday();
+  document.getElementById('am-err').textContent='';
+  renderAttendanceModalList();
+  document.getElementById('attendance-modal').classList.add('open');
+}
+function closeAttendanceModal(){document.getElementById('attendance-modal').classList.remove('open');}
+document.getElementById('attendance-modal').addEventListener('click',function(e){if(e.target===this)closeAttendanceModal();});
+function renderAttendanceModalList(){
+  const g=document.getElementById('am-group').value;
+  const list=document.getElementById('am-list');
+  if(!g){list.innerHTML='<p class="empty" style="font-size:12px;">Select a uGroup to mark attendance.</p>';return;}
+  const date=document.getElementById('am-date').value;
+  const members=meGroupMembers(g);
+  if(!members.length){list.innerHTML='<p class="empty" style="font-size:12px;">No members in this uGroup yet.</p>';return;}
+  list.innerHTML=members.map(m=>{
+    const existing=allAttendance.find(a=>a.ugroup===g&&a.date===date&&a.name===m.name);
+    const present=existing?(existing.present||'No'):'Yes';
+    return `<div class="am-row" data-name="${(m.name||'').replace(/"/g,'&quot;')}" data-role="${(m.role||'').replace(/"/g,'&quot;')}">
+      <span class="am-name">${m.name}${m.role?`<span class="am-role">${m.role}</span>`:''}</span>
+      <div class="am-toggle">
+        <button type="button" class="am-btn am-yes ${present==='Yes'?'active':''}" onclick="setAmPresent(this,'Yes')">Present</button>
+        <button type="button" class="am-btn am-no ${present==='No'?'active':''}" onclick="setAmPresent(this,'No')">Absent</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function setAmPresent(btn,val){
+  const row=btn.closest('.am-row');
+  row.querySelectorAll('.am-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+async function saveAttendanceModal(){
+  const g=document.getElementById('am-group').value;
+  const date=document.getElementById('am-date').value;
+  const err=document.getElementById('am-err');
+  err.textContent='';
+  if(!g){err.textContent='Please select a uGroup.';return;}
+  if(!date){err.textContent='Please select a date.';return;}
+  const rows=[...document.querySelectorAll('#am-list .am-row')];
+  if(!rows.length){err.textContent='No members to mark.';return;}
+  const leader=meGroupLeaderName(g);
+  const records=rows.map(row=>{
+    const name=row.dataset.name;
+    const role=row.dataset.role||'';
+    const activeBtn=row.querySelector('.am-btn.active');
+    const present=(activeBtn&&activeBtn.classList.contains('am-yes'))?'Yes':'No';
+    return{date,ugroup:g,leader,name,role,present};
+  });
+  const saveBtn=document.getElementById('am-save-btn');
+  saveBtn.disabled=true;saveBtn.textContent='Saving…';
+  const{error}=await sb.from('attendance').upsert(records.map(aToDb),{onConflict:'att_date,ugroup_name,member_name'});
+  saveBtn.disabled=false;saveBtn.textContent='✓ Save Attendance';
+  if(error){err.textContent='Save failed: '+error.message;return;}
+  await loadData();
+  closeAttendanceModal();
+  if(currentView==='attendance')renderAttView();
+  alert(`✓ Attendance saved for ${records.length} member${records.length!==1?'s':''} on ${date}.`);
+}
 
 // ════════ UGROUP MODAL ════════
 function openUGroupModal(){
