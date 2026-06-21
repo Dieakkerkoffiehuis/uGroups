@@ -2220,7 +2220,7 @@ async function confirmTransferOut(){
   btn.disabled=true;btn.textContent='Archiving…';
   const{error}=await sb.from('members').update({archived:true}).eq('ugroup_name',g);
   btn.disabled=false;btn.textContent='⇄ Download Handoff File & Archive';
-  if(error){err.textContent='Archive failed: '+error.message+' (Have you run the "archived" column migration in Supabase yet?');return;}
+  if(error){err.textContent='Archive failed: '+error.message+' (Have you run the "archived" column migration in Supabase yet?';return;}
   await loadData();
   closeTransferModal();
   renderAll();try{renderCommandCentre();}catch(e){}
