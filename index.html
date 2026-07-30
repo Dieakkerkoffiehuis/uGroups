@@ -80,6 +80,7 @@ body{
   min-height:100vh;
   font-size:14px;
   line-height:1.5;
+  overflow-x:hidden;
 }
 
 /* ══════════ LOGIN ══════════ */
@@ -224,6 +225,7 @@ body{
   margin-left:var(--sidebar-w);flex:1;
   display:flex;flex-direction:column;
   min-height:100vh;
+  min-width:0;overflow-x:hidden;
 }
 .topbar{
   padding:18px 28px;
@@ -234,7 +236,7 @@ body{
 }
 .topbar-left h2{font-size:18px;font-weight:700;}
 .topbar-left p{font-size:12px;color:var(--text-secondary);margin-top:2px;}
-.topbar-right{display:flex;align-items:center;gap:10px;}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 
 /* Buttons */
 .btn{
@@ -2345,7 +2347,9 @@ function editMember(idx){openMemberModal(idx);}
 async function delMember(idx){
   if(!confirm(`Remove "${allMembers[idx].name}"?`))return;
   const id=allMembers[idx].id;
-  if(id){await sb.from('members').delete().eq('id',id);}
+  if(!id){alert('Cannot delete: member has no ID.');return;}
+  const{error}=await sb.from('members').delete().eq('id',id);
+  if(error){alert('Delete failed: '+error.message);return;}
   await loadData();
   if(currentView==='members')renderMembersView();
 }
